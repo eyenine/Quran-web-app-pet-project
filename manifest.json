@@ -19,12 +19,12 @@
       "sizes": "512x512"
     }
   ],
-  "start_url": ".",
+  "start_url": "/Quran-web-app-pet-project/",
   "display": "standalone",
   "theme_color": "#0C1A1A",
   "background_color": "#ffffff",
   "orientation": "portrait-primary",
-  "scope": "/",
+  "scope": "/Quran-web-app-pet-project/",
   "lang": "en",
   "categories": ["education", "religious", "books", "lifestyle"],
   "screenshots": [
@@ -46,7 +46,7 @@
       "name": "Daily Ayah",
       "short_name": "Daily",
       "description": "View today's daily verse",
-      "url": "/?daily=true",
+      "url": "/Quran-web-app-pet-project/?daily=true",
       "icons": [
         {
           "src": "logo192.png",
@@ -58,7 +58,7 @@
       "name": "Search Quran",
       "short_name": "Search",
       "description": "Search through the Quran",
-      "url": "/search",
+      "url": "/Quran-web-app-pet-project/search",
       "icons": [
         {
           "src": "logo192.png",
@@ -70,7 +70,7 @@
       "name": "My Bookmarks",
       "short_name": "Bookmarks",
       "description": "View saved verses",
-      "url": "/bookmarks",
+      "url": "/Quran-web-app-pet-project/bookmarks",
       "icons": [
         {
           "src": "logo192.png",
