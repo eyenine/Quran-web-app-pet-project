@@ -2,6 +2,7 @@
   "name": "quran-web-app",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://eyenine.github.io/Quran-web-app-pet-project",
   "dependencies": {
     "@tanstack/react-query": "^5.84.0",
     "@testing-library/dom": "^10.4.1",
@@ -34,7 +35,8 @@
     "lint": "eslint src/**/*.{js,jsx,ts,tsx}",
     "lint:fix": "eslint src/**/*.{js,jsx,ts,tsx} --fix",
     "analyze": "npm run build && npx bundle-analyzer build/static/js/*.js",
-    "deploy": "npm run build && vercel --prod",
+    "deploy": "npm run build && gh-pages -d build",
+    "predeploy": "npm run build",
     "type-check": "tsc --noEmit",
     "test:coverage": "npm test -- --coverage --watchAll=false",
     "test:ci": "npm test -- --coverage --watchAll=false --ci",
