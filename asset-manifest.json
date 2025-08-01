@@ -1,27 +1,27 @@
 {
   "files": {
-    "main.css": "/Quran-web-app-pet-project/static/css/main.57fcab5f.css",
-    "main.js": "/Quran-web-app-pet-project/static/js/main.d99fe982.js",
-    "static/js/511.5e9e2b69.chunk.js": "/Quran-web-app-pet-project/static/js/511.5e9e2b69.chunk.js",
-    "static/js/459.f0269cd4.chunk.js": "/Quran-web-app-pet-project/static/js/459.f0269cd4.chunk.js",
-    "static/js/406.2da82b8c.chunk.js": "/Quran-web-app-pet-project/static/js/406.2da82b8c.chunk.js",
-    "static/js/297.842c7616.chunk.js": "/Quran-web-app-pet-project/static/js/297.842c7616.chunk.js",
-    "static/js/581.00310940.chunk.js": "/Quran-web-app-pet-project/static/js/581.00310940.chunk.js",
-    "static/js/753.ac732800.chunk.js": "/Quran-web-app-pet-project/static/js/753.ac732800.chunk.js",
-    "static/js/453.777a4ea7.chunk.js": "/Quran-web-app-pet-project/static/js/453.777a4ea7.chunk.js",
-    "index.html": "/Quran-web-app-pet-project/index.html",
-    "main.57fcab5f.css.map": "/Quran-web-app-pet-project/static/css/main.57fcab5f.css.map",
-    "main.d99fe982.js.map": "/Quran-web-app-pet-project/static/js/main.d99fe982.js.map",
-    "511.5e9e2b69.chunk.js.map": "/Quran-web-app-pet-project/static/js/511.5e9e2b69.chunk.js.map",
-    "459.f0269cd4.chunk.js.map": "/Quran-web-app-pet-project/static/js/459.f0269cd4.chunk.js.map",
-    "406.2da82b8c.chunk.js.map": "/Quran-web-app-pet-project/static/js/406.2da82b8c.chunk.js.map",
-    "297.842c7616.chunk.js.map": "/Quran-web-app-pet-project/static/js/297.842c7616.chunk.js.map",
-    "581.00310940.chunk.js.map": "/Quran-web-app-pet-project/static/js/581.00310940.chunk.js.map",
-    "753.ac732800.chunk.js.map": "/Quran-web-app-pet-project/static/js/753.ac732800.chunk.js.map",
-    "453.777a4ea7.chunk.js.map": "/Quran-web-app-pet-project/static/js/453.777a4ea7.chunk.js.map"
+    "main.css": "/quran-web-app/static/css/main.57fcab5f.css",
+    "main.js": "/quran-web-app/static/js/main.0cad7848.js",
+    "static/js/511.5e9e2b69.chunk.js": "/quran-web-app/static/js/511.5e9e2b69.chunk.js",
+    "static/js/459.f0269cd4.chunk.js": "/quran-web-app/static/js/459.f0269cd4.chunk.js",
+    "static/js/406.2da82b8c.chunk.js": "/quran-web-app/static/js/406.2da82b8c.chunk.js",
+    "static/js/297.842c7616.chunk.js": "/quran-web-app/static/js/297.842c7616.chunk.js",
+    "static/js/581.00310940.chunk.js": "/quran-web-app/static/js/581.00310940.chunk.js",
+    "static/js/753.ac732800.chunk.js": "/quran-web-app/static/js/753.ac732800.chunk.js",
+    "static/js/453.777a4ea7.chunk.js": "/quran-web-app/static/js/453.777a4ea7.chunk.js",
+    "index.html": "/quran-web-app/index.html",
+    "main.57fcab5f.css.map": "/quran-web-app/static/css/main.57fcab5f.css.map",
+    "main.0cad7848.js.map": "/quran-web-app/static/js/main.0cad7848.js.map",
+    "511.5e9e2b69.chunk.js.map": "/quran-web-app/static/js/511.5e9e2b69.chunk.js.map",
+    "459.f0269cd4.chunk.js.map": "/quran-web-app/static/js/459.f0269cd4.chunk.js.map",
+    "406.2da82b8c.chunk.js.map": "/quran-web-app/static/js/406.2da82b8c.chunk.js.map",
+    "297.842c7616.chunk.js.map": "/quran-web-app/static/js/297.842c7616.chunk.js.map",
+    "581.00310940.chunk.js.map": "/quran-web-app/static/js/581.00310940.chunk.js.map",
+    "753.ac732800.chunk.js.map": "/quran-web-app/static/js/753.ac732800.chunk.js.map",
+    "453.777a4ea7.chunk.js.map": "/quran-web-app/static/js/453.777a4ea7.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.57fcab5f.css",
-    "static/js/main.d99fe982.js"
+    "static/js/main.0cad7848.js"
   ]
 }
