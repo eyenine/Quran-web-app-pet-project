@@ -147,7 +147,7 @@ function App() {
     <ErrorBoundary>
       <AppProvider>
         <AudioProvider>
-          <Router basename="/quran-web-app">
+          <Router basename="/Quran-web-app-pet-project">
             <AppContent />
           </Router>
         </AudioProvider>

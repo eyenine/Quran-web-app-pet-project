@@ -2,7 +2,7 @@
   "name": "quran-web-app",
   "version": "0.1.0",
   "private": true,
-  "homepage": ".",
+  "homepage": "https://eyenine.github.io/Quran-web-app-pet-project",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
