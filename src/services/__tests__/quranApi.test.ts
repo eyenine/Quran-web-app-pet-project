@@ -9,13 +9,13 @@ import {
   clearApiCache
 } from '../quranApi';
 
+import { cachedApiRequest } from '../apiClient';
+
 // Mock the API client
 jest.mock('../apiClient', () => ({
   cachedApiRequest: jest.fn(),
   apiRequest: jest.fn(),
 }));
-
-import { cachedApiRequest } from '../apiClient';
 
 const mockCachedApiRequest = cachedApiRequest as jest.MockedFunction<typeof cachedApiRequest>;
 
