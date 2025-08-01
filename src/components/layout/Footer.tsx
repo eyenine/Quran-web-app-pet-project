@@ -10,7 +10,7 @@ export const Footer: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
           <div className="text-sm text-gray-500 dark:text-gray-400">
-            © 2024 Quran Web App. All rights reserved.
+            © 2025 Quran Web App. All rights reserved.
           </div>
           <div className="text-sm text-gray-500 dark:text-gray-400">
             Made with ❤️ for the Muslim community

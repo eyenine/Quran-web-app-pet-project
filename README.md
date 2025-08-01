@@ -1,6 +1,109 @@
 # Quran Web App
 
-A modern, feature-rich React web application for reading and searching the Holy Quran.
+A modern, feature-rich React web application for reading, searching, and listening to the Holy Quran with a beautiful and accessible interface.
+
+---
+
+## Table of Contents
+- [Features](#features)
+- [Live Demo](#live-demo)
+- [Tech Stack](#tech-stack)
+- [Getting Started](#getting-started)
+- [Available Scripts](#available-scripts)
+- [Deployment](#deployment)
+- [Project Structure](#project-structure)
+- [Contributing](#contributing)
+- [License](#license)
+
+---
+
+## Features
+- 📖 Browse all 114 Surahs with Arabic text and translations
+- 🔍 Advanced search for Surahs/verses
+- 📱 Responsive design
+- 🎨 Beautiful Arabic typography
+- 🔊 Audio recitation support
+- 🔖 Bookmark favorite verses
+- 🌙 Dark/Light mode
+- ⚡ Fast, optimized performance
+- 🎯 Accessibility compliant
+
+---
+
+## Live Demo
+[https://your-github-username.github.io/quran-web-app/](https://your-github-username.github.io/quran-web-app/)
+
+---
+
+## Tech Stack
+- **React 19** + TypeScript
+- **React Router**
+- **TanStack Query**
+- **Tailwind CSS**
+- **Framer Motion**
+- **React Hook Form**
+- **Fuse.js**
+- **HTML2Canvas**
+- **QR Code generation**
+
+---
+
+## Getting Started
+
+1. **Clone the repository:**
+   ```sh
+   git clone https://github.com/your-github-username/quran-web-app.git
+   cd quran-web-app
+   ```
+2. **Install dependencies:**
+   ```sh
+   npm install
+   ```
+3. **Start the development server:**
+   ```sh
+   npm start
+   ```
+   Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+
+---
+
+## Available Scripts
+- `npm start` — Run in development mode
+- `npm run build` — Build for production
+- `npm test` — Launch test runner
+- `npm run deploy` — Deploy to GitHub Pages
+
+---
+
+## Deployment
+- **GitHub Pages:**  
+  Set `"homepage"` in `package.json` to your repo URL.  
+  Run:
+  ```sh
+  npm run deploy
+  ```
+- **Netlify:**  
+  Ensure `_redirects` is copied to `build/` for SPA routing.
+
+---
+
+## Project Structure
+- `/src` — React components, pages, hooks, context, and assets
+- `/public` — Static files and manifest
+- `/build` — Production build output
+- `.github/` — GitHub Actions and issue templates
+
+---
+
+## Contributing
+- Report bugs, suggest features, or submit PRs!
+- See [CONTRIBUTING.md](CONTRIBUTING.md) (if available) for guidelines.
+
+---
+
+## License
+This project is open source under the MIT License.
+
 
 ## Features
 
