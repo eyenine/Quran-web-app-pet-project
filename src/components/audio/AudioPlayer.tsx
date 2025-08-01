@@ -7,7 +7,8 @@ export const AudioPlayer: React.FC = () => {
   const { 
     state, 
     playVerse, 
-    pauseAudio, 
+    pauseAudio,
+    stopAudio,
     setVolume, 
     setPlaybackRate, 
     seekTo,
@@ -76,10 +77,15 @@ export const AudioPlayer: React.FC = () => {
               isPlaying={state.isPlaying}
               onPlay={handlePlay}
               onPause={pauseAudio}
+              onStop={stopAudio}
               onNext={playNextVerse}
               onPrevious={playPreviousVerse}
               isLoading={state.isLoading}
+              isBuffering={state.isBuffering}
               disabled={!!state.error}
+              showStop={true}
+              canGoNext={true}
+              canGoPrevious={state.currentVerse ? state.currentVerse.ayahNumber > 1 : false}
             />
           </div>
           

@@ -3,6 +3,7 @@ import { Surah, Ayah } from '../../types';
 import { fetchSurahVerses } from '../../services';
 import { AyahDisplay } from './AyahDisplay';
 import { LoadingSpinner, ErrorMessage } from '../common';
+import { SurahAudioControls } from '../audio';
 import { useLanguage } from '../../context';
 
 interface SurahViewProps {
@@ -96,14 +97,7 @@ export const SurahView: React.FC<SurahViewProps> = ({
     setError(null);
     setAyahs([]);
     setLoading(true);
-    // Re-trigger the effect by updating a dependency
-    setSurahId(surah.id);
-  };
-
-  // Add surahId state to track changes
-  const [surahId, setSurahId] = useState(surah.id);
-
-  useEffect(() => {
+    
     const loadAyahs = async () => {
       try {
         setLoading(true);
@@ -116,9 +110,8 @@ export const SurahView: React.FC<SurahViewProps> = ({
         setLoading(false);
       }
     };
-
     loadAyahs();
-  }, [surah.id, surahId]);
+  };
 
   return (
     <div
@@ -166,6 +159,23 @@ export const SurahView: React.FC<SurahViewProps> = ({
       <div role="banner" aria-label={`Surah ${surah.englishName} (${surah.id}) header`}>
         {headerContent}
       </div>
+      
+      {/* Full Surah Audio Section */}
+      <div className="bg-gradient-to-r from-primary-50 to-accent-50 dark:from-primary-900/20 dark:to-accent-900/20 rounded-lg shadow-sm border border-primary-200 dark:border-primary-700 p-6 mb-6">
+        <div className="text-center mb-4">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+            🎧 Full Surah Audio
+          </h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Listen to the complete recitation of {surah.englishName} ({surah.ayahCount} verses)
+          </p>
+        </div>
+        <SurahAudioControls 
+          surahId={surah.id}
+          totalAyahs={surah.ayahCount}
+          className="justify-center"
+        />
+      </div>
 
       {/* Loading state with skeleton loading */}
       {loading && (
@@ -174,19 +184,6 @@ export const SurahView: React.FC<SurahViewProps> = ({
           role="status"
           aria-label="Loading verses"
         >
-          {/* Skeleton for Surah header */}
-          <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-6 mb-6">
-            <div className="flex flex-col space-y-4">
-              <div className="h-12 w-1/2 bg-gray-200 dark:bg-gray-600 rounded-full animate-pulse"></div>
-              <div className="h-8 w-1/3 bg-gray-200 dark:bg-gray-600 rounded-full animate-pulse"></div>
-              <div className="flex space-x-4">
-                <div className="h-6 w-24 bg-gray-200 dark:bg-gray-600 rounded-full animate-pulse"></div>
-                <div className="h-6 w-24 bg-gray-200 dark:bg-gray-600 rounded-full animate-pulse"></div>
-                <div className="h-6 w-32 bg-gray-200 dark:bg-gray-600 rounded-full animate-pulse"></div>
-              </div>
-            </div>
-          </div>
-          
           {/* Skeleton for verses */}
           {[...Array(5)].map((_, i) => (
             <div key={i} className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 mb-4">

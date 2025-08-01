@@ -33,6 +33,20 @@ export const AyahDisplay: React.FC<AyahDisplayProps> = ({
   const { isBookmarked, addBookmark, removeBookmark } = useBookmarks();
   const { state: audioState } = useAudio();
 
+  // Check if this verse is part of currently playing surah
+  const isPartOfPlayingSurah = useMemo(() => {
+    return audioState.playMode === 'surah' && 
+           audioState.surahData?.surahId === ayah.surahId &&
+           audioState.isPlaying;
+  }, [audioState.playMode, audioState.surahData, audioState.isPlaying, ayah.surahId]);
+
+  // Check if this is the currently playing verse
+  const isCurrentlyPlaying = useMemo(() => {
+    return audioState.currentVerse?.surahId === ayah.surahId &&
+           audioState.currentVerse?.ayahNumber === ayah.ayahNumber &&
+           audioState.isPlaying;
+  }, [audioState.currentVerse, audioState.isPlaying, ayah.surahId, ayah.ayahNumber]);
+
   // Memoize the bookmark state to prevent unnecessary re-renders
   const isCurrentlyBookmarked = useMemo(() => isBookmarked(ayah.id), [isBookmarked, ayah.id]);
 
@@ -70,7 +84,13 @@ export const AyahDisplay: React.FC<AyahDisplayProps> = ({
   return (
     <div 
       ref={containerRef}
-      className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 ${className} ${isFocused ? 'ring-2 ring-primary-500 dark:ring-accent-400' : ''}`}
+      className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm border p-6 transition-all duration-300 ${
+        isCurrentlyPlaying 
+          ? 'border-primary-500 dark:border-primary-400 bg-primary-50 dark:bg-primary-900/20 shadow-lg' 
+          : isPartOfPlayingSurah
+          ? 'border-primary-300 dark:border-primary-600 bg-primary-25 dark:bg-primary-900/10'
+          : 'border-gray-200 dark:border-gray-700'
+      } ${className} ${isFocused ? 'ring-2 ring-primary-500 dark:ring-accent-400' : ''}`}
       tabIndex={0}
       onKeyDown={(e) => {
         if (e.key === 'Enter') {
@@ -87,12 +107,23 @@ export const AyahDisplay: React.FC<AyahDisplayProps> = ({
         <div className="flex items-center space-x-3">
           {/* Ayah number */}
           <div 
-            className="flex-shrink-0 w-8 h-8 bg-primary-500 dark:bg-accent-400 text-white rounded-full flex items-center justify-center text-sm font-semibold"
+            className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold relative ${
+              isCurrentlyPlaying
+                ? 'bg-primary-600 dark:bg-primary-500 text-white shadow-lg animate-pulse'
+                : isPartOfPlayingSurah
+                ? 'bg-primary-400 dark:bg-primary-600 text-white'
+                : 'bg-primary-500 dark:bg-accent-400 text-white'
+            }`}
             aria-label={`Verse ${ayah.ayahNumber}`}
             role="heading"
             aria-level={2}
           >
             {ayah.ayahNumber}
+            {isCurrentlyPlaying && (
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full flex items-center justify-center">
+                <div className="w-1.5 h-1.5 bg-white rounded-full animate-ping"></div>
+              </div>
+            )}
           </div>
           
           {/* Surah info */}
@@ -105,6 +136,7 @@ export const AyahDisplay: React.FC<AyahDisplayProps> = ({
           <AudioButton
             surahId={ayah.surahId}
             ayahNumber={ayah.ayahNumber}
+            showStop={true}
             className="text-gray-500 dark:text-gray-400 hover:text-primary-500 dark:hover:text-accent-400 hover:bg-gray-100 dark:hover:bg-gray-700"
           />
 
