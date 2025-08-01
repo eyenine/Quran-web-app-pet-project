@@ -2,7 +2,31 @@
   "name": "quran-web-app",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://eyenine.github.io/Quran-web-app-pet-project",
+  "homepage": "https://<your-github-username>.github.io/quran-web-app",
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "format": "prettier --write src/**/*.{js,jsx,ts,tsx,json,css,md}",
+    "lint": "eslint src/**/*.{js,jsx,ts,tsx}",
+    "lint:fix": "eslint src/**/*.{js,jsx,ts,tsx} --fix",
+    "analyze": "npm run build && npx bundle-analyzer build/static/js/*.js",
+    "type-check": "tsc --noEmit",
+    "test:coverage": "npm test -- --coverage --watchAll=false",
+    "test:ci": "npm test -- --coverage --watchAll=false --ci",
+    "preview": "npm run build && npx serve -s build -l 3000",
+    "clean": "rm -rf build node_modules package-lock.json",
+    "reinstall": "npm run clean && npm install",
+    "audit": "npm audit --audit-level=moderate",
+    "audit:fix": "npm audit fix",
+    "lighthouse": "npx lighthouse http://localhost:3000 --output=html --output-path=./lighthouse-report.html",
+    "pwa:validate": "npx pwa-asset-generator logo.png ./public -i ./public/manifest.json",
+    "storybook": "start-storybook -p 6006",
+    "build-storybook": "build-storybook"
+  },
   "dependencies": {
     "@tanstack/react-query": "^5.84.0",
     "@testing-library/dom": "^10.4.1",
@@ -26,29 +50,16 @@
     "typescript": "^4.9.5",
     "web-vitals": "^2.1.4"
   },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "format": "prettier --write src/**/*.{js,jsx,ts,tsx,json,css,md}",
-    "lint": "eslint src/**/*.{js,jsx,ts,tsx}",
-    "lint:fix": "eslint src/**/*.{js,jsx,ts,tsx} --fix",
-    "analyze": "npm run build && npx bundle-analyzer build/static/js/*.js",
-    "deploy": "npm run build && gh-pages -d build",
-    "predeploy": "npm run build",
-    "type-check": "tsc --noEmit",
-    "test:coverage": "npm test -- --coverage --watchAll=false",
-    "test:ci": "npm test -- --coverage --watchAll=false --ci",
-    "preview": "npm run build && npx serve -s build -l 3000",
-    "clean": "rm -rf build node_modules package-lock.json",
-    "reinstall": "npm run clean && npm install",
-    "audit": "npm audit --audit-level=moderate",
-    "audit:fix": "npm audit fix",
-    "lighthouse": "npx lighthouse http://localhost:3000 --output=html --output-path=./lighthouse-report.html",
-    "pwa:validate": "npx pwa-asset-generator logo.png ./public -i ./public/manifest.json",
-    "storybook": "start-storybook -p 6006",
-    "build-storybook": "build-storybook"
+  "devDependencies": {
+    "@types/node": "^24.1.0",
+    "@types/react-router-dom": "^5.3.3",
+    "autoprefixer": "^10.4.21",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.3",
+    "gh-pages": "^6.3.0",
+    "postcss": "^8.5.6",
+    "prettier": "^3.6.2",
+    "tailwindcss": "^3.4.17"
   },
   "eslintConfig": {
     "extends": [
@@ -67,16 +78,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "devDependencies": {
-    "@types/node": "^24.1.0",
-    "@types/react-router-dom": "^5.3.3",
-    "autoprefixer": "^10.4.21",
-    "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-prettier": "^5.5.3",
-    "gh-pages": "^6.3.0",
-    "postcss": "^8.5.6",
-    "prettier": "^3.6.2",
-    "tailwindcss": "^3.4.17"
   }
 }
