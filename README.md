@@ -52,7 +52,7 @@ A modern, feature-rich React web application for reading, searching, and listeni
 
 1. **Clone the repository:**
    ```sh
-   git clone https://github.com/your-github-username/quran-web-app.git
+   git clone https://github.com/eyenine/quran-web-app.git
    cd quran-web-app
    ```
 2. **Install dependencies:**
