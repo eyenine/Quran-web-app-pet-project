@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useTheme, useLanguage, useNotes } from '../context';
 import { analytics } from '../services/analytics';
-import { trackThemeChange, trackLanguageChange } from '../services/analytics';
+import { trackPreferenceChange } from '../analytics/events';
+import { clearAnalyticsEvents, exportAnalyticsData } from '../services/analytics';
 
 export const SettingsPage: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
@@ -12,22 +13,22 @@ export const SettingsPage: React.FC = () => {
 
   const handleThemeChange = () => {
     toggleTheme();
-    trackThemeChange(theme === 'light' ? 'dark' : 'light');
+          trackPreferenceChange('theme', 'theme', theme === 'light' ? 'dark' : 'light', theme);
   };
 
   const handleLanguageChange = (newLanguage: 'english' | 'bangla' | 'both') => {
     setLanguage(newLanguage);
-    trackLanguageChange(newLanguage);
+          trackPreferenceChange('language', 'language', newLanguage, language);
   };
 
   const clearAnalyticsData = () => {
-    analytics.clearData();
+    clearAnalyticsEvents();
     alert('Analytics data cleared successfully');
   };
 
-  const exportAnalyticsData = () => {
-    const data = analytics.getAnalyticsData();
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const handleExportAnalyticsData = () => {
+    const data = exportAnalyticsData();
+    const blob = new Blob([data], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -52,7 +53,7 @@ export const SettingsPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6 px-4 sm:px-0">
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
         <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">
@@ -80,16 +81,16 @@ export const SettingsPage: React.FC = () => {
             </div>
             <button
               onClick={handleThemeChange}
-              className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+              className="relative inline-flex h-8 w-14 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
               style={{
                 backgroundColor: theme === 'dark' ? '#0C1A1A' : '#e5e7eb'
               }}
             >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  theme === 'dark' ? 'translate-x-6' : 'translate-x-1'
-                }`}
-              />
+                              <span
+                  className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
+                    theme === 'dark' ? 'translate-x-7' : 'translate-x-1'
+                  }`}
+                />
             </button>
           </div>
 
@@ -128,7 +129,7 @@ export const SettingsPage: React.FC = () => {
         </h2>
         
         <div className="space-y-4">
-          {/* Analytics Toggle */}
+          {/* Analytics Toggle - Disabled for now */}
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-medium text-gray-900 dark:text-white">Analytics</h3>
@@ -136,19 +137,9 @@ export const SettingsPage: React.FC = () => {
                 Help us improve by sharing usage data
               </p>
             </div>
-            <button
-              onClick={() => analytics.setEnabled(!analytics.getAnalyticsData().events.length)}
-              className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-              style={{
-                backgroundColor: analytics.getAnalyticsData().events.length > 0 ? '#0C1A1A' : '#e5e7eb'
-              }}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  analytics.getAnalyticsData().events.length > 0 ? 'translate-x-6' : 'translate-x-1'
-                }`}
-              />
-            </button>
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              Always enabled
+            </div>
           </div>
 
           {/* Cache Management */}
@@ -288,7 +279,7 @@ export const SettingsPage: React.FC = () => {
                 {showAnalytics ? 'Hide' : 'Show'} Analytics
               </button>
               <button
-                onClick={exportAnalyticsData}
+                onClick={handleExportAnalyticsData}
                 className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-md transition-colors"
               >
                 Export Data

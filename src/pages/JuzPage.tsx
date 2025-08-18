@@ -93,7 +93,7 @@ export const JuzPage: React.FC = () => {
       </div>
 
       {/* Juz Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         {Array.from({ length: 30 }, (_, i) => i + 1).map((juzNumber) => {
           const verses = juzData[juzNumber];
           const isLoading = loadingJuz === juzNumber;
@@ -105,7 +105,7 @@ export const JuzPage: React.FC = () => {
           return (
             <div
               key={juzNumber}
-              className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-all duration-200"
+              className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 sm:p-6 hover:shadow-lg transition-all duration-200"
             >
               <div 
                 className="cursor-pointer"
@@ -141,7 +141,7 @@ export const JuzPage: React.FC = () => {
 
                 {isLoading && (
                   <div className="mt-4 flex justify-center">
-                    <LoadingSpinner size="small" />
+                    <LoadingSpinner size="sm" />
                   </div>
                 )}
 

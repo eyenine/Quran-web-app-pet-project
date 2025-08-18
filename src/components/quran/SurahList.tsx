@@ -56,7 +56,7 @@ export const SurahList: React.FC<SurahListProps> = ({
   if (loading) {
     return (
       <div className={`flex justify-center py-8 ${className}`}>
-        <LoadingSpinner size="medium" text="Loading Surahs..." />
+        <LoadingSpinner size="md" text="Loading Surahs..." />
       </div>
     );
   }
@@ -105,25 +105,29 @@ export const SurahList: React.FC<SurahListProps> = ({
           className="w-full px-3 py-2 text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
         />
         <div className="flex flex-wrap gap-1 text-xs">
-          {Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i)).map(letter => (
-            <a key={letter} href={`#surah-letter-${letter}`} className="px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
-              {letter}
+          {Array.from({ length: 12 }, (_, i) => i + 1).map(group => (
+            <a 
+              key={group} 
+              href={`#surah-group-${group}`} 
+              className="px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
+            >
+              {group * 10 - 9}-{Math.min(group * 10, 114)}
             </a>
           ))}
         </div>
       </div>
       {surahs
         .slice()
-        .sort((a, b) => a.englishName.localeCompare(b.englishName))
+        .sort((a, b) => a.id - b.id)
         .map((surah, idx, arr) => {
-          const currentLetter = surah.englishName.charAt(0).toUpperCase();
-          const prevLetter = idx > 0 ? arr[idx - 1].englishName.charAt(0).toUpperCase() : '';
-          const showHeader = idx === 0 || currentLetter !== prevLetter;
+          const currentGroup = Math.floor((surah.id - 1) / 10);
+          const prevGroup = idx > 0 ? Math.floor((arr[idx - 1].id - 1) / 10) : -1;
+          const showHeader = idx === 0 || currentGroup !== prevGroup;
           return (
             <React.Fragment key={surah.id}>
               {showHeader && (
-                <div id={`surah-letter-${currentLetter}`} className="pt-2 text-xs font-semibold text-gray-500 dark:text-gray-400">
-                  {currentLetter}
+                <div id={`surah-group-${currentGroup + 1}`} className="pt-2 text-xs font-semibold text-gray-500 dark:text-gray-400">
+                  Surahs {currentGroup * 10 + 1}-{Math.min((currentGroup + 1) * 10, 114)}
                 </div>
               )}
               <div

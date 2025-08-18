@@ -1,263 +1,254 @@
-// Analytics service for tracking user interactions and app performance
+// Analytics Service
+// This is a simple analytics service that can be extended with actual analytics providers
 
-interface AnalyticsEvent {
-  event: string;
-  category: string;
-  action: string;
-  label?: string;
-  value?: number;
-  timestamp: number;
-  sessionId: string;
-  userId?: string;
-}
-
-interface PageView {
-  path: string;
-  title: string;
-  timestamp: number;
-  sessionId: string;
-}
-
-interface PerformanceMetric {
+export interface AnalyticsEvent {
   name: string;
-  value: number;
-  timestamp: number;
-  sessionId: string;
+  properties?: Record<string, any>;
 }
 
-class Analytics {
-  private sessionId: string;
-  private userId?: string;
-  private events: AnalyticsEvent[] = [];
-  private pageViews: PageView[] = [];
-  private performanceMetrics: PerformanceMetric[] = [];
-  private isEnabled: boolean = true;
+export interface AnalyticsService {
+  track(eventName: string, properties?: Record<string, any>): void;
+  identify(userId: string, traits?: Record<string, any>): void;
+  page(path: string, properties?: Record<string, any>): void;
+  getAnalyticsData(): any;
+}
+
+// Simple console-based analytics service for development
+class ConsoleAnalyticsService implements AnalyticsService {
+  track(eventName: string, properties?: Record<string, any>): void {
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`📊 Analytics Event: ${eventName}`, properties);
+    }
+    
+    // In production, you would send this to your analytics provider
+    // Example: Google Analytics, Mixpanel, Amplitude, etc.
+    this.sendToProvider(eventName, properties);
+  }
+
+  identify(userId: string, traits?: Record<string, any>): void {
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`📊 Analytics Identify: ${userId}`, traits);
+    }
+    
+    this.sendToProvider('identify', { userId, traits });
+  }
+
+  page(path: string, properties?: Record<string, any>): void {
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`📊 Analytics Page: ${path}`, properties);
+    }
+    
+    this.sendToProvider('page', { path, ...properties });
+  }
+
+  private sendToProvider(eventName: string, properties?: Record<string, any>): void {
+    // This is where you would integrate with actual analytics providers
+    // For now, we'll just store events in localStorage for debugging
+    
+    try {
+      const events = JSON.parse(localStorage.getItem('analytics_events') || '[]');
+      events.push({
+        event: eventName,
+        properties,
+        timestamp: new Date().toISOString(),
+      });
+      
+      // Keep only last 100 events
+      if (events.length > 100) {
+        events.splice(0, events.length - 100);
+      }
+      
+      localStorage.setItem('analytics_events', JSON.stringify(events));
+    } catch (error) {
+      console.warn('Failed to store analytics event:', error);
+    }
+  }
+
+  getAnalyticsData(): any {
+    try {
+      return JSON.parse(localStorage.getItem('analytics_events') || '[]');
+    } catch {
+      return [];
+    }
+  }
+}
+
+// Google Analytics 4 integration (optional)
+class GoogleAnalyticsService implements AnalyticsService {
+  private gtag: any;
 
   constructor() {
-    this.sessionId = this.generateSessionId();
-    this.loadUserId();
-    this.setupPerformanceMonitoring();
+    this.gtag = (window as any).gtag;
   }
 
-  private generateSessionId(): string {
-    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-  }
-
-  private loadUserId(): void {
-    try {
-      const stored = localStorage.getItem('quran_analytics_user_id');
-      if (stored) {
-        this.userId = stored;
-      } else {
-        this.userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        localStorage.setItem('quran_analytics_user_id', this.userId);
-      }
-    } catch (error) {
-      console.warn('Failed to load/save user ID:', error);
+  track(eventName: string, properties?: Record<string, any>): void {
+    if (this.gtag) {
+      this.gtag('event', eventName, properties);
+    } else {
+      console.warn('Google Analytics not loaded');
     }
   }
 
-  private setupPerformanceMonitoring(): void {
-    if ('performance' in window) {
-      // Monitor page load performance
-      window.addEventListener('load', () => {
-        setTimeout(() => {
-          const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
-          if (navigation) {
-            this.trackPerformance('page_load_time', navigation.loadEventEnd - navigation.loadEventStart);
-            this.trackPerformance('dom_content_loaded', navigation.domContentLoadedEventEnd - navigation.domContentLoadedEventStart);
-          }
-        }, 0);
+  identify(userId: string, traits?: Record<string, any>): void {
+    if (this.gtag) {
+      this.gtag('config', 'GA_MEASUREMENT_ID', {
+        user_id: userId,
+        custom_map: traits,
       });
-
-      // Monitor long tasks
-      if ('PerformanceObserver' in window) {
-        const observer = new PerformanceObserver((list) => {
-          for (const entry of list.getEntries()) {
-            if (entry.duration > 50) { // Tasks longer than 50ms
-              this.trackPerformance('long_task', entry.duration);
-            }
-          }
-        });
-        observer.observe({ entryTypes: ['longtask'] });
-      }
     }
   }
 
-  // Track custom events
-  trackEvent(category: string, action: string, label?: string, value?: number): void {
-    if (!this.isEnabled) return;
-
-    const event: AnalyticsEvent = {
-      event: 'interaction',
-      category,
-      action,
-      label,
-      value,
-      timestamp: Date.now(),
-      sessionId: this.sessionId,
-      userId: this.userId
-    };
-
-    this.events.push(event);
-    this.sendEvent(event);
+  page(path: string, properties?: Record<string, any>): void {
+    if (this.gtag) {
+      this.gtag('config', 'GA_MEASUREMENT_ID', {
+        page_path: path,
+        ...properties,
+      });
+    }
   }
 
-  // Track page views
-  trackPageView(path: string, title: string): void {
-    if (!this.isEnabled) return;
-
-    const pageView: PageView = {
-      path,
-      title,
-      timestamp: Date.now(),
-      sessionId: this.sessionId
-    };
-
-    this.pageViews.push(pageView);
-    this.sendPageView(pageView);
-  }
-
-  // Track performance metrics
-  trackPerformance(name: string, value: number): void {
-    if (!this.isEnabled) return;
-
-    const metric: PerformanceMetric = {
-      name,
-      value,
-      timestamp: Date.now(),
-      sessionId: this.sessionId
-    };
-
-    this.performanceMetrics.push(metric);
-    this.sendPerformanceMetric(metric);
-  }
-
-  // Track Quran-specific events
-  trackSurahView(surahId: number, surahName: string): void {
-    this.trackEvent('quran', 'surah_view', surahName, surahId);
-  }
-
-  trackAyahPlay(surahId: number, ayahNumber: number): void {
-    this.trackEvent('audio', 'ayah_play', `${surahId}:${ayahNumber}`);
-  }
-
-  trackBookmarkAdd(surahId: number, ayahNumber: number): void {
-    this.trackEvent('bookmarks', 'add', `${surahId}:${ayahNumber}`);
-  }
-
-  trackSearch(query: string, resultCount: number): void {
-    this.trackEvent('search', 'query', query, resultCount);
-  }
-
-  trackThemeChange(theme: 'light' | 'dark'): void {
-    this.trackEvent('preferences', 'theme_change', theme);
-  }
-
-  trackLanguageChange(language: string): void {
-    this.trackEvent('preferences', 'language_change', language);
-  }
-
-  trackError(error: Error, context?: string): void {
-    this.trackEvent('error', 'app_error', context || error.message);
-  }
-
-  // Send data to analytics endpoint
-  private async sendEvent(event: AnalyticsEvent): Promise<void> {
+  getAnalyticsData(): any {
     try {
-      // In a real app, you would send this to your analytics service
-      // For now, we'll just log it and store locally
-      console.log('Analytics Event:', event);
-      
-      // Store in localStorage for debugging
-      const stored = JSON.parse(localStorage.getItem('quran_analytics_events') || '[]');
-      stored.push(event);
-      localStorage.setItem('quran_analytics_events', JSON.stringify(stored.slice(-100))); // Keep last 100 events
-    } catch (error) {
-      console.warn('Failed to send analytics event:', error);
+      return JSON.parse(localStorage.getItem('analytics_events') || '[]');
+    } catch {
+      return [];
     }
-  }
-
-  private async sendPageView(pageView: PageView): Promise<void> {
-    try {
-      console.log('Page View:', pageView);
-      
-      const stored = JSON.parse(localStorage.getItem('quran_analytics_pageviews') || '[]');
-      stored.push(pageView);
-      localStorage.setItem('quran_analytics_pageviews', JSON.stringify(stored.slice(-50))); // Keep last 50 page views
-    } catch (error) {
-      console.warn('Failed to send page view:', error);
-    }
-  }
-
-  private async sendPerformanceMetric(metric: PerformanceMetric): Promise<void> {
-    try {
-      console.log('Performance Metric:', metric);
-      
-      const stored = JSON.parse(localStorage.getItem('quran_analytics_performance') || '[]');
-      stored.push(metric);
-      localStorage.setItem('quran_analytics_performance', JSON.stringify(stored.slice(-50))); // Keep last 50 metrics
-    } catch (error) {
-      console.warn('Failed to send performance metric:', error);
-    }
-  }
-
-  // Get analytics data for debugging
-  getAnalyticsData(): {
-    events: AnalyticsEvent[];
-    pageViews: PageView[];
-    performanceMetrics: PerformanceMetric[];
-  } {
-    return {
-      events: [...this.events],
-      pageViews: [...this.pageViews],
-      performanceMetrics: [...this.performanceMetrics]
-    };
-  }
-
-  // Enable/disable analytics
-  setEnabled(enabled: boolean): void {
-    this.isEnabled = enabled;
-  }
-
-  // Clear stored data
-  clearData(): void {
-    this.events = [];
-    this.pageViews = [];
-    this.performanceMetrics = [];
-    localStorage.removeItem('quran_analytics_events');
-    localStorage.removeItem('quran_analytics_pageviews');
-    localStorage.removeItem('quran_analytics_performance');
   }
 }
 
-// Create singleton instance
-export const analytics = new Analytics();
+// Mixpanel integration (optional)
+class MixpanelService implements AnalyticsService {
+  private mixpanel: any;
 
-// Export convenience functions
-export const trackEvent = (category: string, action: string, label?: string, value?: number) => 
-  analytics.trackEvent(category, action, label, value);
+  constructor() {
+    this.mixpanel = (window as any).mixpanel;
+  }
 
-export const trackPageView = (path: string, title: string) => 
-  analytics.trackPageView(path, title);
+  track(eventName: string, properties?: Record<string, any>): void {
+    if (this.mixpanel) {
+      this.mixpanel.track(eventName, properties);
+    } else {
+      console.warn('Mixpanel not loaded');
+    }
+  }
 
-export const trackSurahView = (surahId: number, surahName: string) => 
-  analytics.trackSurahView(surahId, surahName);
+  identify(userId: string, traits?: Record<string, any>): void {
+    if (this.mixpanel) {
+      this.mixpanel.identify(userId);
+      if (traits) {
+        this.mixpanel.people.set(traits);
+      }
+    }
+  }
 
-export const trackAyahPlay = (surahId: number, ayahNumber: number) => 
-  analytics.trackAyahPlay(surahId, ayahNumber);
+  page(path: string, properties?: Record<string, any>): void {
+    if (this.mixpanel) {
+      this.mixpanel.track('Page View', { path, ...properties });
+    }
+  }
 
-export const trackBookmarkAdd = (surahId: number, ayahNumber: number) => 
-  analytics.trackBookmarkAdd(surahId, ayahNumber);
+  getAnalyticsData(): any {
+    try {
+      return JSON.parse(localStorage.getItem('analytics_events') || '[]');
+    } catch {
+      return [];
+    }
+  }
+}
 
-export const trackSearch = (query: string, resultCount: number) => 
-  analytics.trackSearch(query, resultCount);
+// Analytics service factory
+export function createAnalyticsService(provider: 'console' | 'ga' | 'mixpanel' = 'console'): AnalyticsService {
+  switch (provider) {
+    case 'ga':
+      return new GoogleAnalyticsService();
+    case 'mixpanel':
+      return new MixpanelService();
+    default:
+      return new ConsoleAnalyticsService();
+  }
+}
 
-export const trackThemeChange = (theme: 'light' | 'dark') => 
-  analytics.trackThemeChange(theme);
+// Default analytics instance
+export const analytics: AnalyticsService = createAnalyticsService();
 
-export const trackLanguageChange = (language: string) => 
-  analytics.trackLanguageChange(language);
+// Analytics configuration
+export interface AnalyticsConfig {
+  provider: 'console' | 'ga' | 'mixpanel';
+  enabled: boolean;
+  debug: boolean;
+  userId?: string;
+  sessionId?: string;
+}
 
-export const trackError = (error: Error, context?: string) => 
-  analytics.trackError(error, context); 
+export const analyticsConfig: AnalyticsConfig = {
+  provider: 'console',
+  enabled: true,
+  debug: process.env.NODE_ENV === 'development',
+  userId: undefined,
+  sessionId: undefined,
+};
+
+// Initialize analytics
+export function initializeAnalytics(config: Partial<AnalyticsConfig> = {}): void {
+  Object.assign(analyticsConfig, config);
+  
+  // Generate session ID if not provided
+  if (!analyticsConfig.sessionId) {
+    analyticsConfig.sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+  
+  // Set user ID from localStorage if available
+  if (!analyticsConfig.userId) {
+    const storedUserId = localStorage.getItem('user_id');
+    if (storedUserId) {
+      analyticsConfig.userId = storedUserId;
+    }
+  }
+  
+  // Identify user if available
+  if (analyticsConfig.userId) {
+    analytics.identify(analyticsConfig.userId, {
+      sessionId: analyticsConfig.sessionId,
+      appVersion: process.env.REACT_APP_VERSION || '1.0.0',
+      environment: process.env.NODE_ENV,
+    });
+  }
+  
+  if (analyticsConfig.debug) {
+    console.log('📊 Analytics initialized:', analyticsConfig);
+  }
+}
+
+// Utility functions
+export function setUserId(userId: string): void {
+  analyticsConfig.userId = userId;
+  localStorage.setItem('user_id', userId);
+  analytics.identify(userId);
+}
+
+export function getAnalyticsEvents(): any[] {
+  try {
+    return JSON.parse(localStorage.getItem('analytics_events') || '[]');
+  } catch {
+    return [];
+  }
+}
+
+export function clearAnalyticsEvents(): void {
+  localStorage.removeItem('analytics_events');
+}
+
+export function exportAnalyticsData(): string {
+  const events = getAnalyticsEvents();
+  const data = {
+    exportDate: new Date().toISOString(),
+    config: analyticsConfig,
+    events,
+  };
+  return JSON.stringify(data, null, 2);
+}
+
+// Auto-initialize on import
+if (typeof window !== 'undefined') {
+  initializeAnalytics();
+} 

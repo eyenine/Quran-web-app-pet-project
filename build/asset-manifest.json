@@ -1,0 +1,29 @@
+{
+  "files": {
+    "main.css": "/Quran-web-app-pet-project/static/css/main.48463bad.css",
+    "main.js": "/Quran-web-app-pet-project/static/js/main.2a033cf6.js",
+    "static/js/511.0e49157c.chunk.js": "/Quran-web-app-pet-project/static/js/511.0e49157c.chunk.js",
+    "static/js/459.19d82101.chunk.js": "/Quran-web-app-pet-project/static/js/459.19d82101.chunk.js",
+    "static/js/910.adbc07f0.chunk.js": "/Quran-web-app-pet-project/static/js/910.adbc07f0.chunk.js",
+    "static/js/406.31bc5092.chunk.js": "/Quran-web-app-pet-project/static/js/406.31bc5092.chunk.js",
+    "static/js/297.8149effa.chunk.js": "/Quran-web-app-pet-project/static/js/297.8149effa.chunk.js",
+    "static/js/581.7638e99b.chunk.js": "/Quran-web-app-pet-project/static/js/581.7638e99b.chunk.js",
+    "static/js/753.1528cad5.chunk.js": "/Quran-web-app-pet-project/static/js/753.1528cad5.chunk.js",
+    "static/js/453.543e74ca.chunk.js": "/Quran-web-app-pet-project/static/js/453.543e74ca.chunk.js",
+    "index.html": "/Quran-web-app-pet-project/index.html",
+    "main.48463bad.css.map": "/Quran-web-app-pet-project/static/css/main.48463bad.css.map",
+    "main.2a033cf6.js.map": "/Quran-web-app-pet-project/static/js/main.2a033cf6.js.map",
+    "511.0e49157c.chunk.js.map": "/Quran-web-app-pet-project/static/js/511.0e49157c.chunk.js.map",
+    "459.19d82101.chunk.js.map": "/Quran-web-app-pet-project/static/js/459.19d82101.chunk.js.map",
+    "910.adbc07f0.chunk.js.map": "/Quran-web-app-pet-project/static/js/910.adbc07f0.chunk.js.map",
+    "406.31bc5092.chunk.js.map": "/Quran-web-app-pet-project/static/js/406.31bc5092.chunk.js.map",
+    "297.8149effa.chunk.js.map": "/Quran-web-app-pet-project/static/js/297.8149effa.chunk.js.map",
+    "581.7638e99b.chunk.js.map": "/Quran-web-app-pet-project/static/js/581.7638e99b.chunk.js.map",
+    "753.1528cad5.chunk.js.map": "/Quran-web-app-pet-project/static/js/753.1528cad5.chunk.js.map",
+    "453.543e74ca.chunk.js.map": "/Quran-web-app-pet-project/static/js/453.543e74ca.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.48463bad.css",
+    "static/js/main.2a033cf6.js"
+  ]
+}

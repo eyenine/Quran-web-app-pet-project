@@ -5,6 +5,7 @@ import { AyahDisplay } from './AyahDisplay';
 import { LoadingSpinner, ErrorMessage } from '../common';
 import { SurahAudioControls } from '../audio';
 import { useLanguage } from '../../context';
+import { TafsirModal } from '../tafsir/TafsirModal';
 
 interface SurahViewProps {
   surah: Surah;
@@ -22,6 +23,32 @@ export const SurahView: React.FC<SurahViewProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { language } = useLanguage();
+  
+  // Tafsir Modal state
+  const [tafsirModal, setTafsirModal] = useState<{
+    isOpen: boolean;
+    type: 'verse' | 'surah' | 'revelation' | 'historical' | 'details' | 'related';
+    ayahNumber?: number;
+  }>({
+    isOpen: false,
+    type: 'surah'
+  });
+
+  // Tafsir Modal handlers
+  const openTafsirModal = (type: 'verse' | 'surah' | 'revelation' | 'historical' | 'details' | 'related', ayahNumber?: number) => {
+    setTafsirModal({
+      isOpen: true,
+      type,
+      ayahNumber
+    });
+  };
+
+  const closeTafsirModal = () => {
+    setTafsirModal({
+      isOpen: false,
+      type: 'surah'
+    });
+  };
 
   // Memoize the Surah header content
   const headerContent = useMemo(() => {
@@ -66,6 +93,80 @@ export const SurahView: React.FC<SurahViewProps> = ({
       </div>
     );
   }, [surah, language]);
+
+  // Add Tafsir and Shan-e-Nuzul options
+  const tafsirOptions = useMemo(() => (
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        {language === 'bangla' ? 'তাফসীর ও ঐতিহাসিক তথ্য' : 'Tafsir & Historical Information'}
+      </h3>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Tafsir Options */}
+        <div className="space-y-3">
+          <h4 className="font-medium text-gray-700 dark:text-gray-300">
+            {language === 'bangla' ? 'তাফসীর' : 'Tafsir'}
+          </h4>
+          <div className="space-y-2">
+            <button 
+              className="w-full px-4 py-2 text-left text-sm bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg transition-colors"
+              onClick={() => openTafsirModal('verse')}
+            >
+              📖 {language === 'bangla' ? 'আয়াতের তাফসীর' : 'Verse Tafsir'}
+            </button>
+            <button 
+              className="w-full px-4 py-2 text-left text-sm bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg transition-colors"
+              onClick={() => openTafsirModal('surah')}
+            >
+              📚 {language === 'bangla' ? 'সূরার তাফসীর' : 'Surah Tafsir'}
+            </button>
+          </div>
+        </div>
+
+        {/* Shan-e-Nuzul */}
+        <div className="space-y-3">
+          <h4 className="font-medium text-gray-700 dark:text-gray-300">
+            {language === 'bangla' ? 'শানে নুযূল' : 'Shan-e-Nuzul'}
+          </h4>
+          <div className="space-y-2">
+            <button 
+              className="w-full px-4 py-2 text-left text-sm bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 border border-purple-200 dark:border-purple-800 rounded-lg transition-colors"
+              onClick={() => openTafsirModal('revelation')}
+            >
+              🕋 {language === 'bangla' ? 'নাযিলের কারণ' : 'Revelation Context'}
+            </button>
+            <button 
+              className="w-full px-4 py-2 text-left text-sm bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-800 rounded-lg transition-colors"
+              onClick={() => openTafsirModal('historical')}
+            >
+              🏛️ {language === 'bangla' ? 'ঐতিহাসিক প্রেক্ষাপট' : 'Historical Background'}
+            </button>
+          </div>
+        </div>
+
+        {/* Surah Information */}
+        <div className="space-y-3">
+          <h4 className="font-medium text-gray-700 dark:text-gray-300">
+            {language === 'bangla' ? 'সূরার তথ্য' : 'Surah Details'}
+          </h4>
+          <div className="space-y-2">
+            <button 
+              className="w-full px-4 py-2 text-left text-sm bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/30 border border-orange-200 dark:border-orange-800 rounded-lg transition-colors"
+              onClick={() => openTafsirModal('details')}
+            >
+              ℹ️ {language === 'bangla' ? 'বিস্তারিত তথ্য' : 'Detailed Information'}
+            </button>
+            <button 
+              className="w-full px-4 py-2 text-left text-sm bg-teal-50 dark:bg-teal-900/20 hover:bg-teal-100 dark:hover:bg-teal-900/30 border border-teal-200 dark:border-teal-800 rounded-lg transition-colors"
+              onClick={() => openTafsirModal('related')}
+            >
+              🔗 {language === 'bangla' ? 'সম্পর্কিত সূরা' : 'Related Surahs'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  ), [language]);
 
   useEffect(() => {
     const loadAyahs = async () => {
@@ -150,6 +251,9 @@ export const SurahView: React.FC<SurahViewProps> = ({
       <div role="banner" aria-label={`Surah ${surah.englishName} (${surah.id}) header`}>
         {headerContent}
       </div>
+      
+      {/* Tafsir and Historical Options */}
+      {tafsirOptions}
       
       {/* Full Surah Audio Section */}
       <div className="bg-gradient-to-r from-primary-50 to-accent-50 dark:from-primary-900/20 dark:to-accent-900/20 rounded-lg shadow-sm p-6 mb-6">
@@ -269,8 +373,18 @@ export const SurahView: React.FC<SurahViewProps> = ({
           )}
         </div>
       )}
-    </div>
-  );
-};
+       
+       {/* Tafsir Modal */}
+       <TafsirModal
+         isOpen={tafsirModal.isOpen}
+         onClose={closeTafsirModal}
+         type={tafsirModal.type}
+         surahId={surah.id}
+         ayahNumber={tafsirModal.ayahNumber}
+         surahName={surah.englishName}
+       />
+     </div>
+   );
+ };
 
 export default SurahView;

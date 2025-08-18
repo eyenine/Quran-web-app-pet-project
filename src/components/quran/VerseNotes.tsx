@@ -19,8 +19,7 @@ export const VerseNotes: React.FC<VerseNotesProps> = ({ surahId, ayahNumber, isO
 			setContent(existing?.content || '');
 			setTagsInput(existing?.tags?.join(', ') || '');
 		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [isOpen, surahId, ayahNumber]);
+	}, [isOpen, surahId, ayahNumber, get]);
 
 	const handleSave = () => {
 		const tags = tagsInput

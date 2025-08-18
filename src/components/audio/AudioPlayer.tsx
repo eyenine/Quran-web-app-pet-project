@@ -1,160 +1,235 @@
-import React from 'react';
-import { useAudio } from '../../context/AudioContext';
-import { AudioControls } from './AudioControls';
-import { AudioProgress } from './AudioProgress';
+import React, { useState, useRef, useEffect } from 'react';
+import { trackAudioPlay, trackAudioPause } from '../../analytics/events';
+import { LoadingSpinner } from '../common/LoadingSpinner';
 
-export const AudioPlayer: React.FC = () => {
-  const { 
-    state, 
-    playVerse, 
-    pauseAudio,
-    stopAudio,
-    setVolume, 
-    setPlaybackRate, 
-    seekTo,
-    playNextVerse,
-    playPreviousVerse,
-    clearError,
-    setLooping
-  } = useAudio();
+interface AudioPlayerProps {
+  audioUrl: string;
+  surahId: number;
+  ayahNumber?: number;
+  qariId?: number;
+  qariName?: string;
+  onPlay?: () => void;
+  onPause?: () => void;
+  onEnded?: () => void;
+  onError?: (error: string) => void;
+  className?: string;
+  autoPlay?: boolean;
+  showControls?: boolean;
+}
 
-  if (!state.currentVerse) {
-    return null;
-  }
+export const AudioPlayer: React.FC<AudioPlayerProps> = ({
+  audioUrl,
+  surahId,
+  ayahNumber,
+  qariId,
+  qariName,
+  onPlay,
+  onPause,
+  onEnded,
+  onError,
+  className = '',
+  autoPlay = false,
+  showControls = true,
+}) => {
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [playbackRate, setPlaybackRate] = useState(1);
+  const [error, setError] = useState<string | null>(null);
 
-  const handlePlay = () => {
-    if (state.currentVerse) {
-      playVerse(state.currentVerse.surahId, state.currentVerse.ayahNumber);
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const handleLoadedMetadata = () => {
+      setDuration(audio.duration);
+      setIsLoading(false);
+      setError(null);
+    };
+
+    const handleTimeUpdate = () => {
+      setCurrentTime(audio.currentTime);
+    };
+
+    const handlePlay = () => {
+      setIsPlaying(true);
+      onPlay?.();
+      trackAudioPlay(surahId, ayahNumber, duration, qariId, playbackRate);
+    };
+
+    const handlePause = () => {
+      setIsPlaying(false);
+      onPause?.();
+      trackAudioPause(surahId, ayahNumber, currentTime, duration);
+    };
+
+    const handleEnded = () => {
+      setIsPlaying(false);
+      setCurrentTime(0);
+      onEnded?.();
+    };
+
+    const handleError = () => {
+      setIsLoading(false);
+      setIsPlaying(false);
+      const errorMessage = 'Failed to load audio';
+      setError(errorMessage);
+      onError?.(errorMessage);
+    };
+
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('play', handlePlay);
+    audio.addEventListener('pause', handlePause);
+    audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('error', handleError);
+
+    return () => {
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('play', handlePlay);
+      audio.removeEventListener('pause', handlePause);
+      audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('error', handleError);
+    };
+  }, [audioUrl, surahId, ayahNumber, qariId, onPlay, onPause, onEnded, onError, duration, currentTime, playbackRate]);
+
+  const togglePlayPause = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    if (isPlaying) {
+      audio.pause();
+    } else {
+      audio.play().catch((error) => {
+        console.error('Failed to play audio:', error);
+        setError('Failed to play audio');
+      });
     }
   };
 
-  const handleSeek = (time: number) => {
-    seekTo(time);
+  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const newTime = parseFloat(e.target.value);
+    audio.currentTime = newTime;
+    setCurrentTime(newTime);
   };
 
+  const formatTime = (time: number): string => {
+    if (isNaN(time)) return '0:00';
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  if (error) {
+    return (
+      <div className={`bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 ${className}`}>
+        <div className="flex items-center space-x-2 text-red-600 dark:text-red-400">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span className="text-sm font-medium">{error}</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 z-50 shadow-lg">
-      <div className="max-w-4xl mx-auto">
-        {/* Error Message */}
-        {state.error && (
-          <div className="mb-3 p-2 bg-red-100 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-red-700 dark:text-red-300">
-                {state.error}
-              </span>
-              <button
-                onClick={clearError}
-                className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-200"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        )}
+    <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 ${className}`}>
+      <audio
+        ref={audioRef}
+        src={audioUrl}
+        preload="metadata"
+        onError={() => setError('Failed to load audio')}
+      />
 
-        <div className="flex items-center justify-between gap-4">
-          {/* Verse Info */}
-          <div className="flex items-center space-x-4 min-w-0 flex-1">
-            <div className="flex-shrink-0 w-10 h-10 bg-primary-100 dark:bg-primary-800 rounded-full flex items-center justify-center">
-              <span className="text-primary-600 dark:text-primary-300 font-semibold text-sm">
-                {state.currentVerse.surahId}:{state.currentVerse.ayahNumber}
-              </span>
-            </div>
-            <div className="min-w-0">
-              <h3 className="font-semibold text-gray-900 dark:text-white text-sm truncate">
-                Surah {state.currentVerse.surahId}, Verse {state.currentVerse.ayahNumber}
-              </h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                {state.isLoading ? 'Loading...' : state.isPlaying ? 'Playing' : 'Paused'}
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            <h4 className="text-sm font-medium text-gray-900 dark:text-white">
+              Surah {surahId}
+              {ayahNumber && ` - Ayah ${ayahNumber}`}
+            </h4>
+            {qariName && (
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Recited by {qariName}
               </p>
-            </div>
+            )}
           </div>
           
-          {/* Audio Controls */}
-          <div className="flex-shrink-0">
-            <AudioControls 
-              isPlaying={state.isPlaying}
-              onPlay={handlePlay}
-              onPause={pauseAudio}
-              onStop={stopAudio}
-              onNext={playNextVerse}
-              onPrevious={playPreviousVerse}
-              isLoading={state.isLoading}
-              isBuffering={state.isBuffering}
-              disabled={!!state.error}
-              showStop={true}
-              canGoNext={true}
-              canGoPrevious={state.currentVerse ? state.currentVerse.ayahNumber > 1 : false}
-            />
-          </div>
-          
-          {/* Progress and Controls */}
-          <div className="flex items-center space-x-4 min-w-0 flex-1">
-            <div className="flex-1 min-w-0">
-              <AudioProgress 
-                progress={state.progress}
-                duration={state.duration}
-                onSeek={handleSeek}
-                disabled={state.isLoading || !!state.error}
-              />
-            </div>
-            
-            {/* Volume Control */}
-            <div className="flex items-center space-x-2 flex-shrink-0">
-              <svg className="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-              </svg>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.1"
-                value={state.volume}
-                onChange={(e) => setVolume(parseFloat(e.target.value))}
-                className="w-16 h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer"
-                disabled={state.isLoading}
-              />
-              <span className="text-xs text-gray-500 dark:text-gray-400 w-8">
-                {Math.round(state.volume * 100)}%
-              </span>
-            </div>
-            
-            {/* Playback Speed */}
-            <div className="flex items-center space-x-2 flex-shrink-0">
-              <svg className="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              <select
-                value={state.playbackRate}
-                onChange={(e) => setPlaybackRate(parseFloat(e.target.value))}
-                className="text-xs bg-transparent border border-gray-300 dark:border-gray-600 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                disabled={state.isLoading}
-              >
-                <option value={0.5}>0.5x</option>
-                <option value={0.75}>0.75x</option>
-                <option value={1}>1x</option>
-                <option value={1.25}>1.25x</option>
-                <option value={1.5}>1.5x</option>
-                <option value={2}>2x</option>
-              </select>
-            </div>
-
-            {/* Loop toggle */}
-            <div className="flex items-center space-x-2 flex-shrink-0">
-              <button
-                onClick={() => setLooping(!state.isLooping)}
-                className={`px-2 py-1 text-xs rounded border ${state.isLooping ? 'bg-primary-600 text-white border-primary-600' : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300'}`}
-                title={state.isLooping ? 'Disable loop' : 'Enable loop'}
-                aria-pressed={state.isLooping}
-              >
-                Loop {state.playMode === 'surah' ? 'Surah' : 'Verse'}
-              </button>
-            </div>
+          <div className="flex items-center space-x-2">
+            <label className="text-xs text-gray-500 dark:text-gray-400">Speed:</label>
+            <select
+              value={playbackRate}
+              onChange={(e) => setPlaybackRate(parseFloat(e.target.value))}
+              className="text-xs bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-gray-700 dark:text-gray-300"
+            >
+              <option value={0.5}>0.5x</option>
+              <option value={0.75}>0.75x</option>
+              <option value={1}>1x</option>
+              <option value={1.25}>1.25x</option>
+              <option value={1.5}>1.5x</option>
+              <option value={2}>2x</option>
+            </select>
           </div>
         </div>
       </div>
+
+      {showControls && (
+        <div className="p-4">
+          <div className="mb-4">
+            <div className="flex items-center space-x-2 mb-2">
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {formatTime(currentTime)}
+              </span>
+              <div className="flex-1">
+                <input
+                  type="range"
+                  min="0"
+                  max={duration || 0}
+                  value={currentTime}
+                  onChange={handleSeek}
+                  className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+                  style={{
+                    background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${(currentTime / (duration || 1)) * 100}%, #e5e7eb ${(currentTime / (duration || 1)) * 100}%, #e5e7eb 100%)`
+                  }}
+                />
+              </div>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {formatTime(duration)}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-center">
+            <button
+              onClick={togglePlayPause}
+              disabled={isLoading}
+              className="flex items-center justify-center w-12 h-12 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              aria-label={isPlaying ? 'Pause' : 'Play'}
+            >
+              {isLoading ? (
+                <LoadingSpinner size="sm" color="white" />
+              ) : isPlaying ? (
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5 ml-1" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
+
+export default AudioPlayer;

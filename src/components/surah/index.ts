@@ -1,0 +1,2 @@
+export { SurahInfoPanel } from './SurahInfoPanel';
+

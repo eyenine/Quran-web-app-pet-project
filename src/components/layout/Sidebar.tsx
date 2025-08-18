@@ -36,6 +36,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'bookmarks' as SidebarTab, label: 'Bookmarks', icon: '🔖', count: bookmarkCount },
   ];
 
+  // Quick action buttons for mobile
+  const quickActions = [
+    { label: 'Search', icon: '🔍', path: '/search' },
+    { label: 'Settings', icon: '⚙️', path: '/settings' },
+    { label: 'Daily Ayah', icon: '📅', path: '/?daily=true' },
+  ];
+
   const handleSurahSelect = (surah: Surah) => {
     navigate(`/surah/${surah.id}`);
     onSurahSelect?.(surah);
@@ -257,6 +264,28 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </div>
               </button>
             ))}
+          </div>
+
+          {/* Quick Actions for Mobile */}
+          <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+            <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3">Quick Actions</h3>
+            <div className="grid grid-cols-3 gap-2">
+              {quickActions.map((action) => (
+                <button
+                  key={action.path}
+                  onClick={() => {
+                    navigate(action.path);
+                    onClose();
+                  }}
+                  className="flex flex-col items-center p-3 rounded-lg bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                >
+                  <span className="text-2xl mb-1">{action.icon}</span>
+                  <span className="text-xs text-gray-600 dark:text-gray-300 text-center">
+                    {action.label}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Content */}

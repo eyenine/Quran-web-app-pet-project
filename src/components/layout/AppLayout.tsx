@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 import { Footer } from './Footer';
-import { AudioPlayer } from '../audio/AudioPlayer';
+
 import { Surah } from '../../types';
 
 interface AppLayoutProps {
@@ -89,8 +89,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
         aria-label="App footer"
       />
 
-      {/* Audio Player */}
-      <AudioPlayer />
+      {/* Audio Player - Will be implemented when audio functionality is added */}
     </div>
   );
 };

@@ -4,7 +4,8 @@ import { useLanguage, useBookmarks } from '../../context';
 import { useAudio } from '../../context/AudioContext';
 import { VerseNotes } from './VerseNotes';
 import { AudioButton } from '../audio/AudioButton';
-import { trackAyahPlay, trackBookmarkAdd } from '../../services/analytics';
+import { trackAudioPlay, trackBookmarkAdd } from '../../analytics/events';
+import { TafsirModal } from '../tafsir/TafsirModal';
 
 interface AyahDisplayProps {
   ayah: Ayah;
@@ -34,6 +35,13 @@ export const AyahDisplay: React.FC<AyahDisplayProps> = ({
   const { isBookmarked, addBookmark, removeBookmark } = useBookmarks();
   const { state: audioState } = useAudio();
   const [isNotesOpen, setIsNotesOpen] = useState(false);
+  
+  // Tafsir Modal state
+  const [isTafsirOpen, setIsTafsirOpen] = useState(false);
+
+  // Tafsir Modal handler
+  const openTafsir = () => setIsTafsirOpen(true);
+  const closeTafsir = () => setIsTafsirOpen(false);
 
   // Check if this verse is part of currently playing surah
   const isPartOfPlayingSurah = useMemo(() => {
@@ -77,7 +85,7 @@ export const AyahDisplay: React.FC<AyahDisplayProps> = ({
         ayahNumber: ayah.ayahNumber,
         timestamp: Date.now()
       });
-      trackBookmarkAdd(ayah.surahId, ayah.ayahNumber);
+      trackBookmarkAdd(`${ayah.surahId}:${ayah.ayahNumber}`, ayah.surahId, ayah.ayahNumber);
     }
   };
 
@@ -189,6 +197,18 @@ export const AyahDisplay: React.FC<AyahDisplayProps> = ({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5M18.5 2.5a2.121 2.121 0 00-3 0L7 11v4h4l8.5-8.5a2.121 2.121 0 000-3z" />
             </svg>
           </button>
+
+          {/* Tafsir button */}
+          <button
+            onClick={openTafsir}
+            className="p-2 rounded-md text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            aria-label="View Tafsir"
+            title="View Tafsir for this verse"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </button>
         </div>
       </div>
 
@@ -240,6 +260,14 @@ export const AyahDisplay: React.FC<AyahDisplayProps> = ({
         ayahNumber={ayah.ayahNumber}
         isOpen={isNotesOpen}
         onClose={() => setIsNotesOpen(false)}
+      />
+
+      <TafsirModal
+        type="verse"
+        surahId={ayah.surahId}
+        ayahNumber={ayah.ayahNumber}
+        isOpen={isTafsirOpen}
+        onClose={closeTafsir}
       />
     </div>
   );

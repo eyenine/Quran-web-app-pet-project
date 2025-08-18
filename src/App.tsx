@@ -1,5 +1,6 @@
 import React, { useEffect, useState, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AppProvider } from './context';
 import { AudioProvider } from './context/AudioContext';
 import { AppLayout, ErrorBoundary, LoadingSpinner } from './components';
@@ -129,7 +130,7 @@ const AppContent: React.FC = () => {
     >
       <Suspense fallback={
         <div className="flex justify-center py-12">
-          <LoadingSpinner size="large" text="Loading page..." />
+          <LoadingSpinner size="xl" text="Loading page..." />
         </div>
       }>
         <Routes>
@@ -148,14 +149,18 @@ const AppContent: React.FC = () => {
 };
 
 function App() {
-  const basename = process.env.NODE_ENV === 'production' ? '/quran-web-app' : '/';
+  const basename = process.env.NODE_ENV === 'production' ? '/Quran-web-app-pet-project' : '/';
   return (
     <ErrorBoundary>
-      <AppProvider>
-        <Router basename={basename}>
-          <AppContent />
-        </Router>
-      </AppProvider>
+      <QueryClientProvider client={new QueryClient()}>
+        <AppProvider>
+          <Router basename={basename}>
+            <AudioProvider>
+              <AppContent />
+            </AudioProvider>
+          </Router>
+        </AppProvider>
+      </QueryClientProvider>
     </ErrorBoundary>
   );
 }

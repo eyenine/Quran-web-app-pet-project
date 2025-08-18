@@ -21,7 +21,7 @@ export const SearchResults: React.FC<SearchResultsProps> = ({
   if (loading) {
     return (
       <div className={`flex justify-center py-8 ${className}`}>
-        <LoadingSpinner size="medium" text="Searching..." />
+        <LoadingSpinner size="md" text="Searching..." />
       </div>
     );
   }

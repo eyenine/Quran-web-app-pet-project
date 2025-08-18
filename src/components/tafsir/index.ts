@@ -1,0 +1,2 @@
+export { TafsirModal } from './TafsirModal';
+

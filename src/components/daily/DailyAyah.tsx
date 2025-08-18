@@ -62,7 +62,7 @@ export const DailyAyah: React.FC<DailyAyahProps> = ({ className = '' }) => {
           Daily Ayah
         </h2>
         <div className="flex justify-center py-8">
-          <LoadingSpinner size="medium" text="Loading today's verse..." />
+          <LoadingSpinner size="md" text="Loading today's verse..." />
         </div>
       </div>
     );

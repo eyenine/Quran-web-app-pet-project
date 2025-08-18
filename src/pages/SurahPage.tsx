@@ -47,7 +47,7 @@ export const SurahPage: React.FC = () => {
   // Memoize the loading spinner to prevent unnecessary re-renders
   const loadingSpinner = useMemo(() => (
     <div className="flex justify-center py-12">
-      <LoadingSpinner size="large" text="Loading Surah..." />
+              <LoadingSpinner size="xl" text="Loading Surah..." />
     </div>
   ), []);
 
