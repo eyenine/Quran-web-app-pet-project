@@ -12,7 +12,7 @@ export const SurahAudioControls: React.FC<SurahAudioControlsProps> = ({
   totalAyahs,
   className = ''
 }) => {
-  const { state, playSurah, pauseAudio, stopAudio } = useAudio();
+  const { state, playSurah, pauseAudio, stopAudio, setLooping } = useAudio();
   const [startFromVerse, setStartFromVerse] = useState(1);
   const [showOptions, setShowOptions] = useState(false);
 
@@ -133,6 +133,19 @@ export const SurahAudioControls: React.FC<SurahAudioControlsProps> = ({
             <span className="text-sm font-medium">Stop</span>
           </button>
         )}
+
+        {/* Loop toggle */}
+        <button
+          onClick={() => setLooping(!state.isLooping)}
+          className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 ${state.isLooping ? 'bg-primary-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'} focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2`}
+          aria-label="Toggle loop"
+          title={state.isLooping ? 'Disable loop' : 'Enable loop'}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v6h6M20 20v-6h-6M20 8a8 8 0 00-15.5-2M4 16a8 8 0 0015.5 2" />
+          </svg>
+          <span className="text-sm font-medium">Loop</span>
+        </button>
       </div>
 
       {/* Options panel */}

@@ -220,9 +220,9 @@ export function getVerseAudioUrl(surahId: number, ayahNumber: number): string {
  * Get audio URL for a complete Surah
  */
 export function getSurahAudioUrl(surahId: number): string {
-  // Format: https://download.quranicaudio.com/quran/mishary_rashid_alafasy/001.mp3
-  const paddedSurah = surahId.toString().padStart(3, '0');
-  return `https://download.quranicaudio.com/quran/mishary_rashid_alafasy/${paddedSurah}.mp3`;
+  // Use Islamic Network CDN (commonly used by Quran.com)
+  // Format: https://cdn.islamic.network/quran/audio-surah/128/ar.alafasy/1.mp3
+  return `https://cdn.islamic.network/quran/audio-surah/128/ar.alafasy/${surahId}.mp3`;
 }
 
 /**

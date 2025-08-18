@@ -2,6 +2,7 @@ import React, { useMemo, useRef, useState } from 'react';
 import { Ayah } from '../../types';
 import { useLanguage, useBookmarks } from '../../context';
 import { useAudio } from '../../context/AudioContext';
+import { VerseNotes } from './VerseNotes';
 import { AudioButton } from '../audio/AudioButton';
 import { trackAyahPlay, trackBookmarkAdd } from '../../services/analytics';
 
@@ -32,6 +33,7 @@ export const AyahDisplay: React.FC<AyahDisplayProps> = ({
   }, [ayah.arabic, ayah.english, ayah.bangla]);
   const { isBookmarked, addBookmark, removeBookmark } = useBookmarks();
   const { state: audioState } = useAudio();
+  const [isNotesOpen, setIsNotesOpen] = useState(false);
 
   // Check if this verse is part of currently playing surah
   const isPartOfPlayingSurah = useMemo(() => {
@@ -78,6 +80,8 @@ export const AyahDisplay: React.FC<AyahDisplayProps> = ({
       trackBookmarkAdd(ayah.surahId, ayah.ayahNumber);
     }
   };
+
+  const openNotes = () => setIsNotesOpen(true);
 
 
 
@@ -174,6 +178,17 @@ export const AyahDisplay: React.FC<AyahDisplayProps> = ({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
             </svg>
           </button>
+
+          {/* Notes button */}
+          <button
+            onClick={openNotes}
+            className="p-2 rounded-md text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            aria-label="Add note"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5M18.5 2.5a2.121 2.121 0 00-3 0L7 11v4h4l8.5-8.5a2.121 2.121 0 000-3z" />
+            </svg>
+          </button>
         </div>
       </div>
 
@@ -219,6 +234,13 @@ export const AyahDisplay: React.FC<AyahDisplayProps> = ({
           </p>
         </div>
       )}
+
+      <VerseNotes
+        surahId={ayah.surahId}
+        ayahNumber={ayah.ayahNumber}
+        isOpen={isNotesOpen}
+        onClose={() => setIsNotesOpen(false)}
+      />
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useReducer, useCallback, ReactNode, useRef, useEffect } from 'react';
+import { getUserPreferences, updateUserPreference } from '../utils/localStorage';
 
 interface AudioState {
   isPlaying: boolean;
@@ -13,6 +14,7 @@ interface AudioState {
   playMode: 'single' | 'surah';
   surahData: { surahId: number; totalAyahs: number } | null;
   isBuffering: boolean;
+  isLooping: boolean;
 }
 
 type AudioAction =
@@ -28,6 +30,7 @@ type AudioAction =
   | { type: 'SET_ERROR'; payload: string | null }
   | { type: 'SET_PLAY_MODE'; payload: 'single' | 'surah' }
   | { type: 'SET_SURAH_DATA'; payload: { surahId: number; totalAyahs: number } | null }
+  | { type: 'SET_LOOPING'; payload: boolean }
   | { type: 'RESET' };
 
 const initialState: AudioState = {
@@ -43,6 +46,7 @@ const initialState: AudioState = {
   error: null,
   playMode: 'single',
   surahData: null,
+  isLooping: false,
 };
 
 function audioReducer(state: AudioState, action: AudioAction): AudioState {
@@ -72,7 +76,9 @@ function audioReducer(state: AudioState, action: AudioAction): AudioState {
     case 'SET_SURAH_DATA':
       return { ...state, surahData: action.payload };
     case 'RESET':
-      return { ...initialState, volume: state.volume, playbackRate: state.playbackRate };
+      return { ...initialState, volume: state.volume, playbackRate: state.playbackRate, isLooping: state.isLooping };
+    case 'SET_LOOPING':
+      return { ...state, isLooping: action.payload };
     default:
       return state;
   }
@@ -91,6 +97,7 @@ interface AudioContextType {
   playNextVerse: () => void;
   playPreviousVerse: () => void;
   clearError: () => void;
+  setLooping: (loop: boolean) => void;
 }
 
 const AudioContext = createContext<AudioContextType | undefined>(undefined);
@@ -108,59 +115,60 @@ interface AudioProviderProps {
 }
 
 export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
-  const [state, dispatch] = useReducer(audioReducer, initialState);
+  const [state, dispatch] = useReducer(audioReducer, {
+    ...initialState,
+    playbackRate: getUserPreferences().playbackRate || initialState.playbackRate,
+  });
+  // Only ever allow one Audio instance globally
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isUnmountedRef = useRef(false);
+  const playbackSessionIdRef = useRef(0);
 
-  // Enhanced cleanup function
+  // DEBUG: Expose audio state for debugging
+  if (typeof window !== 'undefined') {
+    window.__AUDIO_STATE__ = state;
+    window.__AUDIO_REF__ = audioRef;
+  }
+
+  // Enhanced cleanup function: always stop and destroy previous audio
   const cleanupAudio = useCallback(() => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
-
     if (audioRef.current) {
-      const audio = audioRef.current;
-      
-      // Remove all event listeners
-      audio.removeEventListener('loadstart', () => {});
-      audio.removeEventListener('loadeddata', () => {});
-      audio.removeEventListener('loadedmetadata', () => {});
-      audio.removeEventListener('canplay', () => {});
-      audio.removeEventListener('canplaythrough', () => {});
-      audio.removeEventListener('timeupdate', () => {});
-      audio.removeEventListener('ended', () => {});
-      audio.removeEventListener('error', () => {});
-      audio.removeEventListener('waiting', () => {});
-      audio.removeEventListener('playing', () => {});
-      audio.removeEventListener('pause', () => {});
-      
-      // Stop and reset audio
-      audio.pause();
-      audio.currentTime = 0;
-      audio.src = '';
+      try {
+        audioRef.current.pause();
+        audioRef.current.src = '';
+      } catch (e) {}
       audioRef.current = null;
     }
   }, []);
 
   // Enhanced audio creation with better error handling
   const createAudioElement = useCallback((audioUrl: string) => {
+    // Always use a single instance
     const audio = new Audio();
     audio.preload = 'auto';
     audio.crossOrigin = 'anonymous';
     audio.volume = state.volume;
     audio.playbackRate = state.playbackRate;
+    audio.loop = state.isLooping && state.playMode === 'single';
     
     return audio;
-  }, [state.volume, state.playbackRate]);
+  }, [state.volume, state.playbackRate, state.isLooping, state.playMode]);
 
   // Forward declaration for recursive function
-  const playAudioRef = useRef<((surahId: number, ayahNumber: number, mode?: 'single' | 'surah') => Promise<void>) | null>(null);
+  const playAudioRef = useRef<((surahId: number, ayahNumber: number, mode?: 'single' | 'surah', totalAyahs?: number) => Promise<void>) | null>(null);
 
   // Main play function with improved error handling
-  const playAudio = useCallback(async (surahId: number, ayahNumber: number, mode: 'single' | 'surah' = 'single') => {
+  const playAudio = useCallback(async (surahId: number, ayahNumber: number, mode: 'single' | 'surah' = 'single', totalAyahs?: number) => {
     if (isUnmountedRef.current) return;
+
+    // Bump session id so old handlers become no-ops
+    playbackSessionIdRef.current += 1;
+    const sessionId = playbackSessionIdRef.current;
 
     // Clean up any existing audio
     cleanupAudio();
@@ -172,7 +180,6 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
     dispatch({ type: 'SET_PROGRESS', payload: 0 });
     dispatch({ type: 'SET_DURATION', payload: 0 });
     
-    // Generate audio URL with better formatting
     const paddedSurah = surahId.toString().padStart(3, '0');
     const paddedAyah = ayahNumber.toString().padStart(3, '0');
     const audioUrl = `https://verses.quran.com/Alafasy/mp3/${paddedSurah}${paddedAyah}.mp3`;
@@ -183,76 +190,81 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
       const audio = createAudioElement(audioUrl);
       audioRef.current = audio;
       
-      // Set up event listeners with proper cleanup
       const handleLoadStart = () => {
-        if (!isUnmountedRef.current) {
-          dispatch({ type: 'SET_LOADING', payload: true });
-          dispatch({ type: 'SET_BUFFERING', payload: true });
-        }
+        if (isUnmountedRef.current || sessionId !== playbackSessionIdRef.current) return;
+        dispatch({ type: 'SET_LOADING', payload: true });
+        dispatch({ type: 'SET_BUFFERING', payload: true });
       };
 
       const handleLoadedData = () => {
-        if (!isUnmountedRef.current) {
-          dispatch({ type: 'SET_BUFFERING', payload: false });
-        }
+        if (isUnmountedRef.current || sessionId !== playbackSessionIdRef.current) return;
+        dispatch({ type: 'SET_BUFFERING', payload: false });
       };
 
       const handleLoadedMetadata = () => {
-        if (!isUnmountedRef.current) {
-          dispatch({ type: 'SET_DURATION', payload: audio.duration || 0 });
-          dispatch({ type: 'SET_LOADING', payload: false });
-        }
+        if (isUnmountedRef.current || sessionId !== playbackSessionIdRef.current) return;
+        dispatch({ type: 'SET_DURATION', payload: audio.duration || 0 });
+        dispatch({ type: 'SET_LOADING', payload: false });
       };
 
       const handleCanPlay = () => {
-        if (!isUnmountedRef.current) {
-          dispatch({ type: 'SET_LOADING', payload: false });
-          dispatch({ type: 'SET_BUFFERING', payload: false });
-        }
+        if (isUnmountedRef.current || sessionId !== playbackSessionIdRef.current) return;
+        dispatch({ type: 'SET_LOADING', payload: false });
+        dispatch({ type: 'SET_BUFFERING', payload: false });
       };
 
       const handleTimeUpdate = () => {
-        if (!isUnmountedRef.current && audio.currentTime) {
+        if (isUnmountedRef.current || sessionId !== playbackSessionIdRef.current) return;
+        if (audio.currentTime) {
           dispatch({ type: 'SET_PROGRESS', payload: audio.currentTime });
         }
       };
 
       const handleWaiting = () => {
-        if (!isUnmountedRef.current) {
-          dispatch({ type: 'SET_BUFFERING', payload: true });
-        }
+        if (isUnmountedRef.current || sessionId !== playbackSessionIdRef.current) return;
+        dispatch({ type: 'SET_BUFFERING', payload: true });
       };
 
       const handlePlaying = () => {
-        if (!isUnmountedRef.current) {
-          dispatch({ type: 'SET_PLAYING', payload: true });
-          dispatch({ type: 'SET_BUFFERING', payload: false });
-        }
+        if (isUnmountedRef.current || sessionId !== playbackSessionIdRef.current) return;
+        dispatch({ type: 'SET_PLAYING', payload: true });
+        dispatch({ type: 'SET_BUFFERING', payload: false });
       };
 
       const handlePause = () => {
-        if (!isUnmountedRef.current) {
-          dispatch({ type: 'SET_PLAYING', payload: false });
-        }
+        if (isUnmountedRef.current || sessionId !== playbackSessionIdRef.current) return;
+        dispatch({ type: 'SET_PLAYING', payload: false });
       };
 
       const handleEnded = () => {
-        if (isUnmountedRef.current) return;
-        
+        if (isUnmountedRef.current || sessionId !== playbackSessionIdRef.current) return;
         dispatch({ type: 'SET_PLAYING', payload: false });
         dispatch({ type: 'SET_PROGRESS', payload: 0 });
-        
-        // Handle auto-play next verse in surah mode
-        if (mode === 'surah' && state.surahData) {
+        if (state.isLooping && mode === 'single' && state.currentVerse) {
+          const cv = state.currentVerse;
+          timeoutRef.current = setTimeout(() => {
+            if (!isUnmountedRef.current && sessionId === playbackSessionIdRef.current && playAudioRef.current && cv) {
+              playAudioRef.current(cv.surahId, cv.ayahNumber, 'single');
+            }
+          }, 200);
+          return;
+        }
+        if (mode === 'surah') {
+          const limit = typeof totalAyahs === 'number' ? totalAyahs : state.surahData?.totalAyahs;
           const nextAyah = ayahNumber + 1;
-          if (nextAyah <= state.surahData.totalAyahs) {
+          if (limit && nextAyah <= limit) {
             timeoutRef.current = setTimeout(() => {
-              if (!isUnmountedRef.current && playAudioRef.current) {
-                playAudioRef.current(surahId, nextAyah, 'surah');
+              if (!isUnmountedRef.current && sessionId === playbackSessionIdRef.current && playAudioRef.current) {
+                playAudioRef.current(surahId, nextAyah, 'surah', limit);
               }
-            }, 800); // Smooth transition delay
+            }, 400);
+          } else if (state.isLooping) {
+            timeoutRef.current = setTimeout(() => {
+              if (!isUnmountedRef.current && sessionId === playbackSessionIdRef.current && playAudioRef.current) {
+                playAudioRef.current(surahId, 1, 'surah', limit);
+              }
+            }, 400);
           } else {
-            // End of surah
             dispatch({ type: 'SET_PLAY_MODE', payload: 'single' });
             dispatch({ type: 'SET_SURAH_DATA', payload: null });
           }
@@ -260,16 +272,14 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
       };
 
       const handleError = (e: Event) => {
-        if (!isUnmountedRef.current) {
-          console.error('Audio error:', e);
-          dispatch({ type: 'SET_ERROR', payload: 'Failed to load audio. Please try again.' });
-          dispatch({ type: 'SET_LOADING', payload: false });
-          dispatch({ type: 'SET_BUFFERING', payload: false });
-          dispatch({ type: 'SET_PLAYING', payload: false });
-        }
+        if (isUnmountedRef.current || sessionId !== playbackSessionIdRef.current) return;
+        console.error('Audio error:', e);
+        dispatch({ type: 'SET_ERROR', payload: 'Failed to load audio. Please try again.' });
+        dispatch({ type: 'SET_LOADING', payload: false });
+        dispatch({ type: 'SET_BUFFERING', payload: false });
+        dispatch({ type: 'SET_PLAYING', payload: false });
       };
 
-      // Add event listeners
       audio.addEventListener('loadstart', handleLoadStart);
       audio.addEventListener('loadeddata', handleLoadedData);
       audio.addEventListener('loadedmetadata', handleLoadedMetadata);
@@ -281,17 +291,14 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
       audio.addEventListener('ended', handleEnded);
       audio.addEventListener('error', handleError);
 
-      // Set source and load
       audio.src = audioUrl;
       audio.load();
 
-      // Attempt to play
       const playPromise = audio.play();
-      
       if (playPromise !== undefined) {
         await playPromise;
       }
-      
+
     } catch (error) {
       if (!isUnmountedRef.current) {
         console.error('Error playing audio:', error);
@@ -301,9 +308,8 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
         dispatch({ type: 'SET_PLAYING', payload: false });
       }
     }
-  }, [state.volume, state.playbackRate, state.surahData, cleanupAudio, createAudioElement]);
+  }, [state.surahData, cleanupAudio, createAudioElement]);
 
-  // Set the ref after playAudio is defined
   useEffect(() => {
     playAudioRef.current = playAudio;
   }, [playAudio]);
@@ -317,7 +323,7 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
   const playSurah = useCallback((surahId: number, totalAyahs: number, startFromAyah: number = 1) => {
     dispatch({ type: 'SET_PLAY_MODE', payload: 'surah' });
     dispatch({ type: 'SET_SURAH_DATA', payload: { surahId, totalAyahs } });
-    playAudio(surahId, startFromAyah, 'surah');
+    playAudio(surahId, startFromAyah, 'surah', totalAyahs);
   }, [playAudio]);
 
   const pauseAudio = useCallback(() => {
@@ -356,6 +362,7 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
     if (audioRef.current) {
       audioRef.current.playbackRate = newRate;
     }
+    updateUserPreference('playbackRate', newRate);
   }, []);
 
   const seekTo = useCallback((time: number) => {
@@ -432,11 +439,35 @@ export const AudioProvider: React.FC<AudioProviderProps> = ({ children }) => {
     playNextVerse,
     playPreviousVerse,
     clearError,
+    setLooping: (loop: boolean) => {
+      dispatch({ type: 'SET_LOOPING', payload: loop });
+      if (audioRef.current) {
+        audioRef.current.loop = loop && state.playMode === 'single';
+      }
+    },
   };
+
+  // DEBUG PANEL: For development, render audio state at the bottom
+  const DebugPanel = () => (
+    <div style={{position:'fixed',bottom:0,left:0,right:0,zIndex:9999,background:'#222',color:'#fff',fontSize:12,padding:4,opacity:0.8}}>
+      <pre>{JSON.stringify(state,null,2)}</pre>
+    </div>
+  );
 
   return (
     <AudioContext.Provider value={value}>
       {children}
+      {/* Uncomment for debugging: <DebugPanel /> */}
     </AudioContext.Provider>
   );
 };
+
+// Export debug panel for manual use
+export const AudioDebugPanel = (props: any) => <div style={{position:'fixed',bottom:0,left:0,right:0,zIndex:9999,background:'#222',color:'#fff',fontSize:12,padding:4,opacity:0.8}}><pre>{JSON.stringify(props.state,null,2)}</pre></div>;
+
+declare global {
+  interface Window {
+    __AUDIO_STATE__?: any;
+    __AUDIO_REF__?: any;
+  }
+}

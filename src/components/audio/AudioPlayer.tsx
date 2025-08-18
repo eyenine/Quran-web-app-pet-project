@@ -14,7 +14,8 @@ export const AudioPlayer: React.FC = () => {
     seekTo,
     playNextVerse,
     playPreviousVerse,
-    clearError
+    clearError,
+    setLooping
   } = useAudio();
 
   if (!state.currentVerse) {
@@ -138,6 +139,18 @@ export const AudioPlayer: React.FC = () => {
                 <option value={1.5}>1.5x</option>
                 <option value={2}>2x</option>
               </select>
+            </div>
+
+            {/* Loop toggle */}
+            <div className="flex items-center space-x-2 flex-shrink-0">
+              <button
+                onClick={() => setLooping(!state.isLooping)}
+                className={`px-2 py-1 text-xs rounded border ${state.isLooping ? 'bg-primary-600 text-white border-primary-600' : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300'}`}
+                title={state.isLooping ? 'Disable loop' : 'Enable loop'}
+                aria-pressed={state.isLooping}
+              >
+                Loop {state.playMode === 'surah' ? 'Surah' : 'Verse'}
+              </button>
             </div>
           </div>
         </div>

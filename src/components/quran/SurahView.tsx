@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Surah, Ayah } from '../../types';
-import { fetchSurahVerses } from '../../services';
+import { fetchSurahVerses, getSurahAudioUrl } from '../../services';
 import { AyahDisplay } from './AyahDisplay';
 import { LoadingSpinner, ErrorMessage } from '../common';
 import { SurahAudioControls } from '../audio';
@@ -26,16 +26,7 @@ export const SurahView: React.FC<SurahViewProps> = ({
   // Memoize the Surah header content
   const headerContent = useMemo(() => {
     const getSurahName = (): string => {
-      switch (language) {
-        case 'bangla':
-          return surah.banglaName;
-        case 'english':
-          return surah.englishName;
-        case 'both':
-          return `${surah.englishName} • ${surah.banglaName}`;
-        default:
-          return surah.englishName;
-      }
+      return surah.englishName;
     };
 
     return (
@@ -46,7 +37,7 @@ export const SurahView: React.FC<SurahViewProps> = ({
             {surah.name}
           </h1>
           
-          {/* English/Bengali name */}
+          {/* English name */}
           <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-4">
             {getSurahName()}
           </h2>
@@ -161,20 +152,36 @@ export const SurahView: React.FC<SurahViewProps> = ({
       </div>
       
       {/* Full Surah Audio Section */}
-      <div className="bg-gradient-to-r from-primary-50 to-accent-50 dark:from-primary-900/20 dark:to-accent-900/20 rounded-lg shadow-sm border border-primary-200 dark:border-primary-700 p-6 mb-6">
-        <div className="text-center mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            🎧 Full Surah Audio
-          </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            Listen to the complete recitation of {surah.englishName} ({surah.ayahCount} verses)
-          </p>
-        </div>
-        <SurahAudioControls 
-          surahId={surah.id}
-          totalAyahs={surah.ayahCount}
-          className="justify-center"
-        />
+      <div className="bg-gradient-to-r from-primary-50 to-accent-50 dark:from-primary-900/20 dark:to-accent-900/20 rounded-lg shadow-sm p-6 mb-6">
+        <>
+          {console.log('DEBUG: SurahAudioControls rendered for surah', surah.id)}
+          <div className="text-center mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              🎧 Full Surah Audio
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Listen to the complete recitation of {surah.englishName} ({surah.ayahCount} verses)
+            </p>
+          </div>
+          <SurahAudioControls 
+            surahId={surah.id}
+            totalAyahs={surah.ayahCount}
+            className="justify-center"
+          />
+          {/* Download full surah audio */}
+          <div className="mt-4 flex justify-center">
+            <a
+              href={getSurahAudioUrl(surah.id)}
+              download
+              className="inline-flex items-center space-x-2 px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
+              </svg>
+              <span className="text-sm font-medium">Download Surah Audio</span>
+            </a>
+          </div>
+        </>
       </div>
 
       {/* Loading state with skeleton loading */}

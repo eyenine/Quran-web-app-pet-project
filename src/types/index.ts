@@ -28,11 +28,23 @@ export interface Bookmark {
   note?: string;
 }
 
+export interface NoteEntry {
+  ayahId: number;
+  surahId: number;
+  ayahNumber: number;
+  content: string;
+  createdAt: number;
+  updatedAt: number;
+  tags?: string[];
+}
+
 export interface UserPreferences {
   theme: 'light' | 'dark';
   language: 'english' | 'bangla' | 'both';
   fontSize: 'small' | 'medium' | 'large';
   autoPlay: boolean;
+  playbackRate?: number;
+  preferredQari?: string;
 }
 
 export interface DailyAyah {

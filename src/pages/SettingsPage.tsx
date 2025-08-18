@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { useTheme, useLanguage } from '../context';
+import { useTheme, useLanguage, useNotes } from '../context';
 import { analytics } from '../services/analytics';
 import { trackThemeChange, trackLanguageChange } from '../services/analytics';
 
 export const SettingsPage: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
   const { language, setLanguage } = useLanguage();
+  const { notes, remove } = useNotes();
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [showDebugInfo, setShowDebugInfo] = useState(false);
 
@@ -166,6 +167,109 @@ export const SettingsPage: React.FC = () => {
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Notes Manager */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+          Notes Manager
+        </h2>
+        <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">View and manage your saved verse notes.</p>
+        {notes.length === 0 ? (
+          <div className="text-sm text-gray-500 dark:text-gray-400">No notes saved yet. Open any verse and click the pen icon to add a note.</div>
+        ) : (
+          <div className="space-y-3">
+            {notes.map((n) => (
+              <div key={`${n.surahId}:${n.ayahNumber}`} className="p-3 rounded border border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm font-medium text-gray-900 dark:text-white">{n.surahId}:{n.ayahNumber}</div>
+                  <button onClick={() => remove(n.surahId, n.ayahNumber)} className="text-xs text-red-600 dark:text-red-400">Delete</button>
+                </div>
+                <div className="mt-1 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{n.content}</div>
+                {n.tags && n.tags.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1 text-xs">
+                    {n.tags.map(t => (
+                      <span key={t} className="px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700">{t}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  const data = JSON.stringify(notes, null, 2);
+                  const blob = new Blob([data], { type: 'application/json' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `quran-notes-${new Date().toISOString().split('T')[0]}.json`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }}
+                className="px-3 py-2 rounded bg-primary-600 text-white text-sm"
+              >
+                Export Notes
+              </button>
+              <button
+                onClick={() => {
+                  const w = window.open('', '_blank');
+                  if (!w) return;
+                  const dateStr = new Date().toLocaleString();
+                  const rows = notes.map((n, idx) => `
+                    <tr>
+                      <td style="padding:8px;border:1px solid #ccc;vertical-align:top;">${idx + 1}</td>
+                      <td style="padding:8px;border:1px solid #ccc;vertical-align:top;">${n.surahId}:${n.ayahNumber}</td>
+                      <td style="padding:8px;border:1px solid #ccc;white-space:pre-wrap;">${(n.content || '').replace(/</g, '&lt;')}</td>
+                      <td style="padding:8px;border:1px solid #ccc;vertical-align:top;">${(n.tags || []).join(', ')}</td>
+                      <td style="padding:8px;border:1px solid #ccc;vertical-align:top;">${new Date(n.updatedAt).toLocaleString()}</td>
+                    </tr>
+                  `).join('');
+                  const html = `
+                    <html>
+                      <head>
+                        <title>Quran Notes Export</title>
+                        <meta charset="utf-8" />
+                        <style>
+                          body { font-family: Arial, sans-serif; padding: 24px; color: #111; }
+                          h1 { margin: 0 0 4px; font-size: 20px; }
+                          .meta { color: #555; margin-bottom: 16px; font-size: 12px; }
+                          table { width: 100%; border-collapse: collapse; font-size: 12px; }
+                          th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+                          th { background: #f5f5f5; }
+                        </style>
+                      </head>
+                      <body>
+                        <h1>Quran Notes</h1>
+                        <div class="meta">Exported on ${dateStr} • Total: ${notes.length}</div>
+                        <table>
+                          <thead>
+                            <tr>
+                              <th>#</th>
+                              <th>Reference</th>
+                              <th>Note</th>
+                              <th>Tags</th>
+                              <th>Updated</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            ${rows}
+                          </tbody>
+                        </table>
+                        <script>setTimeout(() => { window.print(); }, 100);</script>
+                      </body>
+                    </html>`;
+                  w.document.open();
+                  w.document.write(html);
+                  w.document.close();
+                }}
+                className="px-3 py-2 rounded bg-gray-700 text-white text-sm"
+              >
+                Export PDF
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Analytics Data (Development Only) */}

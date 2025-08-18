@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SearchBar, SearchResults } from '../components';
 import { SearchResult, Ayah, Surah } from '../types';
 import { fetchSurahs, fetchSurahVerses } from '../services';
 import { useLanguage } from '../context';
+import { getSearchHistory, clearSearchHistory } from '../utils/localStorage';
 import Fuse from 'fuse.js';
 
 export const SearchPage: React.FC = () => {
@@ -12,7 +13,17 @@ export const SearchPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [query, setQuery] = useState('');
   const [allData, setAllData] = useState<{ surahs: Surah[]; ayahs: Ayah[] }>({ surahs: [], ayahs: [] });
+  const [history, setHistory] = useState<string[]>([]);
   const { language, isEnglishEnabled, isBanglaEnabled } = useLanguage();
+  const [rawResults, setRawResults] = useState<SearchResult[]>([]);
+  const [selectedSurahId, setSelectedSurahId] = useState<number | 'all'>('all');
+  const [selectedJuz, setSelectedJuz] = useState<number | 'all'>('all');
+  const THEME_TAGS = useMemo(() => [
+    'mercy', 'patience', 'forgiveness', 'justice', 'gratitude', 'guidance', 'faith', 'charity'
+  ], []);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [visibleCount, setVisibleCount] = useState<number>(20);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   // Load all data for search
   useEffect(() => {
@@ -35,11 +46,14 @@ export const SearchPage: React.FC = () => {
     };
 
     loadSearchData();
+    setHistory(getSearchHistory());
   }, []);
 
   const performSearch = async (searchQuery: string) => {
     if (!searchQuery.trim()) {
+      setRawResults([]);
       setSearchResults([]);
+      setVisibleCount(20);
       return;
     }
 
@@ -94,12 +108,28 @@ export const SearchPage: React.FC = () => {
         });
       }
 
-      // Remove duplicates and limit results
+      // Remove duplicates first
       const uniqueResults = results.filter((result, index, self) => 
         index === self.findIndex(r => r.ayah.id === result.ayah.id)
-      ).slice(0, 20);
+      );
 
-      setSearchResults(uniqueResults);
+      setRawResults(uniqueResults);
+      // Apply filters, tags and limit
+      let filtered = uniqueResults;
+      if (selectedSurahId !== 'all') {
+        filtered = filtered.filter(r => r.ayah.surahId === selectedSurahId);
+      }
+      if (selectedJuz !== 'all') {
+        filtered = filtered.filter(r => r.ayah.juzNumber === selectedJuz);
+      }
+      if (selectedTags.length > 0) {
+        filtered = filtered.filter(r => {
+          const text = `${r.ayah.english} ${r.ayah.bangla}`.toLowerCase();
+          return selectedTags.some(tag => text.includes(tag.toLowerCase()));
+        });
+      }
+      setVisibleCount(20);
+      setSearchResults(filtered.slice(0, 20));
     } catch (error) {
       console.error('Search failed:', error);
       setSearchResults([]);
@@ -111,7 +141,42 @@ export const SearchPage: React.FC = () => {
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
     performSearch(searchQuery);
+    setHistory(getSearchHistory());
   };
+
+  // Re-apply filters and tags when state changes
+  useEffect(() => {
+    let filtered = rawResults;
+    if (selectedSurahId !== 'all') {
+      filtered = filtered.filter(r => r.ayah.surahId === selectedSurahId);
+    }
+    if (selectedJuz !== 'all') {
+      filtered = filtered.filter(r => r.ayah.juzNumber === selectedJuz);
+    }
+    if (selectedTags.length > 0) {
+      filtered = filtered.filter(r => {
+        const text = `${r.ayah.english} ${r.ayah.bangla}`.toLowerCase();
+        return selectedTags.some(tag => text.includes(tag.toLowerCase()));
+      });
+    }
+    setVisibleCount(20);
+    setSearchResults(filtered.slice(0, 20));
+  }, [selectedSurahId, selectedJuz, selectedTags, rawResults]);
+
+  // Infinite scroll via intersection observer
+  useEffect(() => {
+    const node = sentinelRef.current;
+    if (!node) return;
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          setVisibleCount((prev) => Math.min(prev + 20, rawResults.length));
+        }
+      });
+    });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [rawResults.length]);
 
   const handleResultClick = (surahId: number, ayahNumber: number) => {
     navigate(`/surah/${surahId}`);
@@ -128,15 +193,89 @@ export const SearchPage: React.FC = () => {
           onSearch={handleSearch}
           placeholder="Search for verses, keywords, or Surah names..."
         />
+        {/* Filters */}
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label className="block text-xs text-gray-600 dark:text-gray-300 mb-1">Surah</label>
+            <select
+              value={selectedSurahId}
+              onChange={(e) => setSelectedSurahId(e.target.value === 'all' ? 'all' : parseInt(e.target.value))}
+              className="w-full text-sm bg-transparent border border-gray-300 dark:border-gray-600 rounded px-2 py-1"
+            >
+              <option value="all">All</option>
+              {allData.surahs.map(s => (
+                <option key={s.id} value={s.id}>{s.id}. {s.englishName}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs text-gray-600 dark:text-gray-300 mb-1">Juz</label>
+            <select
+              value={selectedJuz}
+              onChange={(e) => setSelectedJuz(e.target.value === 'all' ? 'all' : parseInt(e.target.value))}
+              className="w-full text-sm bg-transparent border border-gray-300 dark:border-gray-600 rounded px-2 py-1"
+            >
+              <option value="all">All</option>
+              {Array.from({ length: 30 }, (_, i) => i + 1).map(j => (
+                <option key={j} value={j}>Juz {j}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs text-gray-600 dark:text-gray-300 mb-1">Themes</label>
+            <div className="flex flex-wrap gap-2">
+              {THEME_TAGS.map(tag => {
+                const active = selectedTags.includes(tag);
+                return (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => setSelectedTags(prev => active ? prev.filter(t => t !== tag) : [...prev, tag])}
+                    className={`px-2 py-1 text-xs rounded-full border ${active ? 'bg-primary-600 text-white border-primary-600' : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200'}`}
+                  >
+                    {tag}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+        {history.length > 0 && (
+          <div className="mt-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-gray-600 dark:text-gray-300">Recent searches</span>
+              <button
+                onClick={() => { clearSearchHistory(); setHistory([]); }}
+                className="text-xs text-red-600 dark:text-red-400 hover:underline"
+              >
+                Clear
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {history.map((term, i) => (
+                <button
+                  key={`${term}-${i}`}
+                  onClick={() => handleSearch(term)}
+                  className="px-2 py-1 text-xs rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
+                >
+                  {term}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Search Results */}
       <SearchResults
-        results={searchResults}
+        results={searchResults.slice(0, visibleCount)}
         loading={loading}
         query={query}
         onResultClick={handleResultClick}
       />
+
+      {/* Infinite scroll sentinel */}
+      <div ref={sentinelRef} className="h-8" />
 
       {/* Search Tips */}
       {!query && (

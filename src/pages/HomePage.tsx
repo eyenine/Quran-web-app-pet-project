@@ -24,7 +24,7 @@ export const HomePage: React.FC = () => {
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Link 
-          to="/surah/1" 
+          to="/surahs" 
           className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 text-center hover:shadow-lg transition-shadow group"
         >
           <div className="text-3xl mb-3 group-hover:scale-110 transition-transform">📖</div>

@@ -1,4 +1,4 @@
-import { Bookmark, UserPreferences, DailyAyah } from '../types';
+import { Bookmark, UserPreferences, DailyAyah, NoteEntry } from '../types';
 import { validateBookmark, validateUserPreferences } from './index';
 
 // Storage keys
@@ -15,7 +15,9 @@ const DEFAULT_USER_PREFERENCES: UserPreferences = {
   theme: 'light',
   language: 'both',
   fontSize: 'medium',
-  autoPlay: false
+  autoPlay: false,
+  playbackRate: 1,
+  preferredQari: 'Alafasy'
 };
 
 // Generic localStorage functions
@@ -195,6 +197,50 @@ export const addToSearchHistory = (searchTerm: string): boolean => {
 
 export const clearSearchHistory = (): boolean => {
   return removeFromStorage(STORAGE_KEYS.SEARCH_HISTORY);
+};
+
+// Notes functions
+const NOTES_KEY_PREFIX = 'quran_app_notes_v2';
+
+export const getNoteKey = (surahId: number, ayahNumber: number): string => {
+  return `${NOTES_KEY_PREFIX}:${surahId}:${ayahNumber}`;
+};
+
+export const saveNote = (note: NoteEntry): boolean => {
+  try {
+    const key = getNoteKey(note.surahId, note.ayahNumber);
+    setToStorage(key, note);
+    return true;
+  } catch (e) {
+    console.error('Failed to save note', e);
+    return false;
+  }
+};
+
+export const getNote = (surahId: number, ayahNumber: number): NoteEntry | null => {
+  return getFromStorage<NoteEntry | null>(getNoteKey(surahId, ayahNumber), null);
+};
+
+export const deleteNote = (surahId: number, ayahNumber: number): boolean => {
+  return removeFromStorage(getNoteKey(surahId, ayahNumber));
+};
+
+export const listAllNotes = (): NoteEntry[] => {
+  try {
+    const notes: NoteEntry[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i) as string;
+      if (key && key.startsWith(NOTES_KEY_PREFIX)) {
+        const note = getFromStorage<NoteEntry | null>(key, null);
+        if (note && note.content) notes.push(note);
+      }
+    }
+    // Sort by updatedAt desc
+    return notes.sort((a, b) => b.updatedAt - a.updatedAt);
+  } catch (e) {
+    console.error('Failed to list notes', e);
+    return [];
+  }
 };
 
 // Storage management functions

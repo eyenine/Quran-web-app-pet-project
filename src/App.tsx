@@ -16,6 +16,10 @@ const SurahPage = React.lazy(() =>
   import('./pages/SurahPage').then(module => ({ default: module.SurahPage }))
 );
 
+const SurahsPage = React.lazy(() => 
+  import('./pages/SurahsPage').then(module => ({ default: module.SurahsPage }))
+);
+
 const SearchPage = React.lazy(() => 
   import('./pages/SearchPage').then(module => ({ default: module.SearchPage }))
 );
@@ -130,6 +134,7 @@ const AppContent: React.FC = () => {
       }>
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/surahs" element={<SurahsPage />} />
           <Route path="/surah/:surahId" element={<SurahPage />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/bookmarks" element={<BookmarksPage />} />
@@ -143,14 +148,13 @@ const AppContent: React.FC = () => {
 };
 
 function App() {
+  const basename = process.env.NODE_ENV === 'production' ? '/quran-web-app' : '/';
   return (
     <ErrorBoundary>
       <AppProvider>
-        <AudioProvider>
-          <Router basename="/quran-web-app">
-            <AppContent />
-          </Router>
-        </AudioProvider>
+        <Router basename={basename}>
+          <AppContent />
+        </Router>
       </AppProvider>
     </ErrorBoundary>
   );
