@@ -4,14 +4,14 @@ const DYNAMIC_CACHE = 'quran-dynamic-v1.0.0';
 
 // Files to cache immediately
 const STATIC_FILES = [
-  '/',
-  '/index.html',
-  '/static/js/bundle.js',
-  '/static/css/main.css',
-  '/manifest.json',
-  '/favicon.ico',
-  '/logo192.png',
-  '/logo512.png'
+  '/Quran-web-app-pet-project/',
+  '/Quran-web-app-pet-project/index.html',
+  '/Quran-web-app-pet-project/static/js/bundle.js',
+  '/Quran-web-app-pet-project/static/css/main.css',
+  '/Quran-web-app-pet-project/manifest.json',
+  '/Quran-web-app-pet-project/favicon.ico',
+  '/Quran-web-app-pet-project/logo192.png',
+  '/Quran-web-app-pet-project/logo512.png'
 ];
 
 // API endpoints to cache
@@ -147,7 +147,7 @@ async function handleStaticRequest(request) {
     
     // Return offline page for navigation requests
     if (request.destination === 'document') {
-      return caches.match('/index.html');
+      return caches.match('/Quran-web-app-pet-project/index.html');
     }
     
     return new Response('Offline', { status: 503 });
@@ -176,8 +176,8 @@ self.addEventListener('push', (event) => {
     const data = event.data.json();
     const options = {
       body: data.body || 'New content available',
-      icon: '/logo192.png',
-      badge: '/logo192.png',
+          icon: '/Quran-web-app-pet-project/logo192.png',
+    badge: '/Quran-web-app-pet-project/logo192.png',
       vibrate: [100, 50, 100],
       data: {
         dateOfArrival: Date.now(),
@@ -187,12 +187,12 @@ self.addEventListener('push', (event) => {
         {
           action: 'explore',
           title: 'Open App',
-          icon: '/logo192.png'
+          icon: '/Quran-web-app-pet-project/logo192.png'
         },
         {
           action: 'close',
           title: 'Close',
-          icon: '/logo192.png'
+          icon: '/Quran-web-app-pet-project/logo192.png'
         }
       ]
     };
@@ -209,7 +209,7 @@ self.addEventListener('notificationclick', (event) => {
 
   if (event.action === 'explore') {
     event.waitUntil(
-      clients.openWindow('/')
+      clients.openWindow('/Quran-web-app-pet-project/')
     );
   }
 });
